@@ -1,0 +1,90 @@
+{
+  "total_audits": 5820,
+  "avg_score": 0.5764,
+  "total_incentive": 33986.0,
+  "avail_compliant": 2965,
+  "outlet_counts": {
+    "Impulse & Grocery": 4361,
+    "Supermarket": 523,
+    "Gas Station": 906,
+    "Bazar": 30
+  },
+  "round_stats": {
+    "80": {
+      "count": 1413,
+      "score_sum": 834.9999999999998,
+      "incentive_sum": 8249.0,
+      "avail_sum": 823
+    },
+    "79": {
+      "count": 1450,
+      "score_sum": 858.3095238095235,
+      "incentive_sum": 8810.0,
+      "avail_sum": 714
+    },
+    "81": {
+      "count": 1497,
+      "score_sum": 822.9404761904759,
+      "incentive_sum": 7935.0,
+      "avail_sum": 678
+    },
+    "82": {
+      "count": 1460,
+      "score_sum": 838.440476190476,
+      "incentive_sum": 8992.0,
+      "avail_sum": 750
+    }
+  },
+  "region_stats": {
+    "Giza": {
+      "count": 993,
+      "score_sum": 553.4523809523805,
+      "incentive_sum": 5469.5
+    },
+    "Alexandria": {
+      "count": 1078,
+      "score_sum": 588.8214285714281,
+      "incentive_sum": 4530.5
+    },
+    "Delta": {
+      "count": 1512,
+      "score_sum": 1013.3214285714283,
+      "incentive_sum": 11978.0
+    },
+    "Canal": {
+      "count": 520,
+      "score_sum": 277.1428571428573,
+      "incentive_sum": 2532.5
+    },
+    "Ismailia": {
+      "count": 19,
+      "score_sum": 8.25,
+      "incentive_sum": 20
+    },
+    "Sinai": {
+      "count": 285,
+      "score_sum": 160.0119047619047,
+      "incentive_sum": 1600.5
+    },
+    "Red Sea": {
+      "count": 265,
+      "score_sum": 150.69047619047623,
+      "incentive_sum": 1610.0
+    },
+    "Cairo": {
+      "count": 1108,
+      "score_sum": 590.416666666666,
+      "incentive_sum": 6149.0
+    },
+    "Port Said": {
+      "count": 2,
+      "score_sum": 0.75,
+      "incentive_sum": 0
+    },
+    "Upper Egypt": {
+      "count": 38,
+      "score_sum": 11.833333333333332,
+      "incentive_sum": 96
+    }
+  }
+}

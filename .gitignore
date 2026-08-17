@@ -1,0 +1,22 @@
+# Python scripts (dev only)
+export_data.py
+check_coords.py
+check_coords2.py
+check_812410.py
+
+# Dev servers (not needed for static hosting)
+server.js
+serve.js
+
+# Raw data source
+*.xlsx
+
+# Old project files
+styles.css
+app.js
+js/
+image.png
+full_headers.txt
+q2_inspection.txt
+__pycache__/
+*.pyc

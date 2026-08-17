@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VIP Audit Dashboard — Q2 2026</title>
+  <meta name="description" content="Red Bull VIP Outlet Audit Dashboard — Q2 2026 KPI compliance, incentive tracking and regional performance." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <!-- Leaflet Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <style>
+    :root {
+      --bg:        #080c18;
+      --bg2:       #0d1225;
+      --surface:   #111827;
+      --surface2:  #1a2238;
+      --border:    rgba(255,255,255,0.08);
+      --red:       #e8001c;
+      --red-glow:  rgba(232,0,28,0.35);
+      --gold:      #f5c518;
+      --gold-dim:  rgba(245,197,24,0.15);
+      --blue:      #3b82f6;
+      --green:     #10b981;
+      --purple:    #8b5cf6;
+      --text:      #f1f5f9;
+      --muted:     #94a3b8;
+      --radius:    14px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: linear-gradient(135deg, #0a0e1a 0%, #14001f 50%, #0a0e1a 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(20px);
+    }
+    .header-inner {
+      max-width: 1600px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 68px;
+      gap: 16px;
+    }
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .rb-logo-img {
+      height: 48px;
+      width: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 0 12px rgba(232,0,28,0.4));
+      flex-shrink: 0;
+    }
+    .logo-divider {
+      width: 1px; height: 36px;
+      background: rgba(255,255,255,0.12);
+      flex-shrink: 0;
+    }
+    .logo-area h1 {
+      font-size: 17px; font-weight: 700; color: var(--text);
+      line-height: 1.2;
+    }
+    .logo-area span {
+      font-size: 12px; color: var(--muted); font-weight: 400;
+    }
+    .adhoc-logo-img {
+      height: 32px;
+      width: auto;
+      object-fit: contain;
+      opacity: 0.9;
+      flex-shrink: 0;
+    }
+    .header-meta {
+      display: flex; gap: 10px; align-items: center;
+      flex-wrap: wrap;
+    }
+    .badge {
+      padding: 4px 12px; border-radius: 20px;
+      font-size: 11px; font-weight: 600; letter-spacing: .5px;
+    }
+    .badge-red { background: rgba(232,0,28,.15); color: var(--red); border: 1px solid rgba(232,0,28,.3); }
+    .badge-gold { background: var(--gold-dim); color: var(--gold); border: 1px solid rgba(245,197,24,.3); }
+    #last-updated { font-size: 11px; color: var(--muted); }
+
+    /* ── MAIN LAYOUT ── */
+    main { max-width: 1600px; margin: 0 auto; padding: 28px 24px 60px; }
+
+    /* ── FILTERS ── */
+    .filters-bar {
+      display: flex; flex-wrap: wrap; gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-bottom: 28px;
+      align-items: center;
+    }
+    .filters-bar label { font-size: 12px; color: var(--muted); font-weight: 500; margin-right: 4px; }
+    .filters-bar select {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 7px 12px;
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .filters-bar select:focus { border-color: var(--red); }
+    .filter-group { display: flex; align-items: center; gap: 6px; }
+    #btn-reset {
+      margin-left: auto;
+      background: rgba(232,0,28,.12);
+      border: 1px solid rgba(232,0,28,.3);
+      color: var(--red);
+      padding: 7px 18px;
+      border-radius: 8px;
+      font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: background .2s;
+      font-family: inherit;
+    }
+    #btn-reset:hover { background: rgba(232,0,28,.22); }
+
+    /* ── KPI CARDS ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    @media (max-width: 900px) { .kpi-grid { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 500px) { .kpi-grid { grid-template-columns: 1fr; } }
+
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+      position: relative;
+      overflow: hidden;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 16px 40px rgba(0,0,0,.4); }
+    .kpi-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    }
+    .kpi-card.red::before   { background: var(--red); box-shadow: 0 0 20px var(--red-glow); }
+    .kpi-card.gold::before  { background: var(--gold); }
+    .kpi-card.blue::before  { background: var(--blue); }
+    .kpi-card.green::before { background: var(--green); }
+    .kpi-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; margin-bottom: 14px;
+    }
+    .kpi-card.red   .kpi-icon { background: rgba(232,0,28,.15); }
+    .kpi-card.gold  .kpi-icon { background: var(--gold-dim); }
+    .kpi-card.blue  .kpi-icon { background: rgba(59,130,246,.15); }
+    .kpi-card.green .kpi-icon { background: rgba(16,185,129,.15); }
+    .kpi-label { font-size: 12px; color: var(--muted); font-weight: 500; margin-bottom: 6px; letter-spacing: .3px; }
+    .kpi-value { font-size: 32px; font-weight: 800; line-height: 1; margin-bottom: 8px; }
+    .kpi-card.red   .kpi-value { color: var(--red); }
+    .kpi-card.gold  .kpi-value { color: var(--gold); }
+    .kpi-card.blue  .kpi-value { color: var(--blue); }
+    .kpi-card.green .kpi-value { color: var(--green); }
+    .kpi-sub { font-size: 11px; color: var(--muted); }
+
+    /* ── CHART GRID ── */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+    .chart-wide { grid-column: 1 / -1; }
+    @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } .chart-wide { grid-column: auto; } }
+
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+    }
+    .chart-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .chart-title {
+      font-size: 14px; font-weight: 600; color: var(--text);
+    }
+    .chart-subtitle { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .chart-wrap { position: relative; height: 260px; }
+    .chart-wrap-sm { position: relative; height: 220px; }
+
+    /* ── TABLE ── */
+    .table-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+      overflow: hidden;
+    }
+    .table-scroll { overflow-x: auto; margin-top: 16px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    thead th {
+      background: var(--surface2);
+      color: var(--muted);
+      font-weight: 600;
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: .3px;
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+    thead th:hover { color: var(--text); }
+    tbody tr { border-bottom: 1px solid rgba(255,255,255,0.03); transition: background .15s; }
+    tbody tr:hover { background: var(--surface2); }
+    tbody td { padding: 9px 12px; color: var(--text); white-space: nowrap; }
+    .pill {
+      display: inline-block;
+      padding: 2px 10px; border-radius: 12px;
+      font-size: 10px; font-weight: 600;
+    }
+    .pill-green { background: rgba(16,185,129,.15); color: #34d399; }
+    .pill-red   { background: rgba(232,0,28,.15); color: #f87171; }
+    .pill-gold  { background: var(--gold-dim); color: var(--gold); }
+    .pill-blue  { background: rgba(59,130,246,.15); color: #93c5fd; }
+    .pill-purple{ background: rgba(139,92,246,.15); color: #c4b5fd; }
+    .score-bar-wrap { width: 80px; background: rgba(255,255,255,.06); border-radius: 4px; height: 6px; display: inline-block; vertical-align: middle; }
+    .score-bar-fill { height: 100%; border-radius: 4px; transition: width .3s; }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center; padding: 24px;
+      font-size: 11px; color: var(--muted);
+      border-top: 1px solid var(--border);
+      max-width: 1600px; margin: 0 auto;
+    }
+    footer a { color: var(--red); text-decoration: none; }
+
+    /* ── LOADING ── */
+    #loading {
+      position: fixed; inset: 0; background: var(--bg);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 9999; gap: 20px;
+    }
+    .spinner {
+      width: 48px; height: 48px;
+      border: 3px solid rgba(232,0,28,.2);
+      border-top-color: var(--red);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loading p { color: var(--muted); font-size: 14px; }
+
+    /* ── ANIMATIONS ── */
+    .fade-in { animation: fadeIn .5s ease forwards; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+    .section-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 1.2px;
+      color: var(--red); text-transform: uppercase; margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-label::after { content:''; flex:1; height:1px; background: rgba(232,0,28,.2); }
+
+    /* ── TAB NAV ── */
+    .tab-nav {
+      display: flex; gap: 4px;
+      max-width: 1600px; margin: 0 auto;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg2);
+      position: sticky; top: 68px; z-index: 90;
+    }
+    .tab-btn {
+      padding: 14px 22px;
+      font-size: 13px; font-weight: 600;
+      color: var(--muted);
+      background: none; border: none;
+      cursor: pointer; font-family: inherit;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color .2s, border-color .2s;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--red); border-bottom-color: var(--red); }
+    .tab-btn .tab-icon { font-size: 15px; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── MAP TAB ── */
+    #map-container {
+      height: calc(100vh - 160px);
+      min-height: 600px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      position: relative;
+    }
+    #leaflet-map { width: 100%; height: 100%; }
+    .map-legend {
+      position: absolute; bottom: 30px; right: 12px; z-index: 1000;
+      background: rgba(13,18,37,0.92);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      backdrop-filter: blur(12px);
+      min-width: 160px;
+    }
+    .map-legend h4 { font-size: 11px; color: var(--muted); font-weight: 600; letter-spacing: .8px; text-transform: uppercase; margin-bottom: 10px; }
+    .legend-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text); margin-bottom: 7px; }
+    .legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; border: 2px solid rgba(255,255,255,.3); }
+    .map-stats-bar {
+      position: absolute; top: 12px; left: 12px; z-index: 1000;
+      display: flex; gap: 8px; flex-wrap: wrap;
+    }
+    .map-stat-pill {
+      background: rgba(13,18,37,0.9);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 12px; font-weight: 600;
+      backdrop-filter: blur(8px);
+      color: var(--text);
+    }
+    .map-stat-pill span { color: var(--gold); }
+    /* Override Leaflet popup for dark theme */
+    .leaflet-popup-content-wrapper {
+      background: #111827 !important;
+      color: #f1f5f9 !important;
+      border: 1px solid rgba(255,255,255,0.1) !important;
+      border-radius: 10px !important;
+      box-shadow: 0 8px 32px rgba(0,0,0,.5) !important;
+    }
+    .leaflet-popup-tip { background: #111827 !important; }
+    .leaflet-popup-content { margin: 12px 16px !important; font-family: 'Inter', sans-serif !important; }
+    .popup-title { font-size: 13px; font-weight: 700; color: #f1f5f9; margin-bottom: 8px; }
+    .popup-row { display: flex; justify-content: space-between; gap: 16px; font-size: 11px; color: #94a3b8; margin-bottom: 4px; }
+    .popup-row strong { color: #f1f5f9; font-weight: 600; }
+    .popup-score { font-size: 20px; font-weight: 800; margin: 8px 0 4px; }
+    /* Leaflet cluster override */
+    .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large {
+      background-clip: padding-box;
+    }
+    .marker-cluster-small  { background-color: rgba(232,0,28,0.3) !important; }
+    .marker-cluster-medium { background-color: rgba(245,197,24,0.3) !important; }
+    .marker-cluster-large  { background-color: rgba(59,130,246,0.3) !important; }
+    .marker-cluster-small  div { background-color: rgba(232,0,28,0.7) !important; color:#fff; font-weight:700; }
+    .marker-cluster-medium div { background-color: rgba(245,197,24,0.7) !important; color:#111; font-weight:700; }
+    .marker-cluster-large  div { background-color: rgba(59,130,246,0.7) !important; color:#fff; font-weight:700; }
+  </style>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div id="loading">
+  <img src="assets/redbull-logo.jpg" alt="Red Bull" style="height:64px;width:auto;border-radius:8px;filter:drop-shadow(0 0 16px rgba(232,0,28,0.5))" />
+  <div class="spinner"></div>
+  <p>Loading audit data…</p>
+</div>
+
+<!-- Header -->
+<header>
+  <div class="header-inner">
+    <div class="logo-area">
+      <img src="assets/redbull-logo.jpg" alt="Red Bull" class="rb-logo-img" />
+      <div class="logo-divider"></div>
+      <div>
+        <h1>VIP Audit Dashboard</h1>
+        <span>Red Bull Egypt — Q2 2026 Field Compliance</span>
+      </div>
+    </div>
+    <div class="header-meta">
+      <span class="badge badge-red">LIVE DATA</span>
+      <span class="badge badge-gold">Q2 2026</span>
+      <span id="last-updated">—</span>
+      <div class="logo-divider"></div>
+      <img src="assets/adhoc-logo.png" alt="ADHOC" class="adhoc-logo-img" />
+    </div>
+  </div>
+</header>
+
+<!-- Tab Navigation -->
+<nav class="tab-nav" id="tab-nav">
+  <button class="tab-btn active" data-tab="overview" id="btn-tab-overview">
+    <span class="tab-icon">📊</span> Overview
+  </button>
+  <button class="tab-btn" data-tab="map" id="btn-tab-map">
+    <span class="tab-icon">🗺</span> Interactive Map
+  </button>
+</nav>
+
+<!-- Main -->
+<main id="app" style="opacity:0">
+
+<div class="tab-panel active" id="tab-overview">
+  <!-- Filters -->
+  <div class="filters-bar fade-in">
+    <div class="filter-group">
+      <label for="f-round">Round</label>
+      <select id="f-round">
+        <option value="all">All Rounds</option>
+        <option value="79">Round 79 — April</option>
+        <option value="80">Round 80 — May</option>
+        <option value="81">Round 81 — June</option>
+        <option value="82">Round 82 — July</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="f-type">Outlet Type</label>
+      <select id="f-type">
+        <option value="all">All Types</option>
+        <option value="Impulse & Grocery">Impulse & Grocery</option>
+        <option value="Gas Station">Gas Station</option>
+        <option value="Supermarket">Supermarket</option>
+        <option value="Bazar">Bazar</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="f-region">Region</label>
+      <select id="f-region">
+        <option value="all">All Regions</option>
+        <option value="Delta">Delta</option>
+        <option value="Cairo">Cairo</option>
+        <option value="Alexandria">Alexandria</option>
+        <option value="Giza">Giza</option>
+        <option value="Canal">Canal</option>
+        <option value="Sinai">Sinai</option>
+        <option value="Red Sea">Red Sea</option>
+        <option value="Upper Egypt">Upper Egypt</option>
+      </select>
+    </div>
+    <button id="btn-reset">↺ Reset</button>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="section-label">Key Performance Indicators</div>
+  <div class="kpi-grid">
+    <div class="kpi-card red fade-in">
+      <div class="kpi-icon">📋</div>
+      <div class="kpi-label">Total Audits</div>
+      <div class="kpi-value" id="k-total">—</div>
+      <div class="kpi-sub">Across 4 rounds · April–July</div>
+    </div>
+    <div class="kpi-card gold fade-in" style="animation-delay:.08s">
+      <div class="kpi-icon">🎯</div>
+      <div class="kpi-label">Avg Compliance Score</div>
+      <div class="kpi-value" id="k-score">—</div>
+      <div class="kpi-sub" id="k-score-sub">—</div>
+    </div>
+    <div class="kpi-card blue fade-in" style="animation-delay:.16s">
+      <div class="kpi-icon">💰</div>
+      <div class="kpi-label">Total Incentive Paid</div>
+      <div class="kpi-value" id="k-incentive">—</div>
+      <div class="kpi-sub">EGP across all outlets</div>
+    </div>
+    <div class="kpi-card green fade-in" style="animation-delay:.24s">
+      <div class="kpi-icon">✅</div>
+      <div class="kpi-label">Availability Compliance</div>
+      <div class="kpi-value" id="k-avail">—</div>
+      <div class="kpi-sub" id="k-avail-sub">outlets fully stocked</div>
+    </div>
+  </div>
+
+  <!-- Charts Row 1 -->
+  <div class="section-label">Compliance Overview</div>
+  <div class="charts-grid">
+    <!-- Round trend -->
+    <div class="chart-card fade-in">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Compliance Trend by Round</div>
+          <div class="chart-subtitle">Average score per audit round (April → July)</div>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="c-trend"></canvas></div>
+    </div>
+    <!-- Outlet type -->
+    <div class="chart-card fade-in" style="animation-delay:.1s">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Compliance by Outlet Type</div>
+          <div class="chart-subtitle">Average score per channel</div>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="c-outlet"></canvas></div>
+    </div>
+    <!-- Region -->
+    <div class="chart-card chart-wide fade-in" style="animation-delay:.15s">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Regional Performance</div>
+          <div class="chart-subtitle">Avg compliance % and total incentive EGP by region</div>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="c-region"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Charts Row 2 -->
+  <div class="section-label">KPI Deep Dive</div>
+  <div class="charts-grid">
+    <!-- Availability per round -->
+    <div class="chart-card fade-in">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Availability Compliance per Round</div>
+          <div class="chart-subtitle">Compliant vs non-compliant outlets</div>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="c-avail"></canvas></div>
+    </div>
+    <!-- Incentive distribution -->
+    <div class="chart-card fade-in" style="animation-delay:.1s">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Incentive EGP Distribution</div>
+          <div class="chart-subtitle">Total incentive by outlet type</div>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="c-incentive"></canvas></div>
+    </div>
+    <!-- SOS -->
+    <div class="chart-card fade-in" style="animation-delay:.15s">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Share of Shelf Compliance</div>
+          <div class="chart-subtitle">Compliant vs non-compliant by outlet type</div>
+        </div>
+      </div>
+      <div class="chart-wrap-sm"><canvas id="c-sos"></canvas></div>
+    </div>
+    <!-- Strike zone -->
+    <div class="chart-card fade-in" style="animation-delay:.2s">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Strike Zone Compliance</div>
+          <div class="chart-subtitle">By outlet type</div>
+        </div>
+      </div>
+      <div class="chart-wrap-sm"><canvas id="c-sz"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Data Table -->
+  <div class="section-label">Outlet Detail</div>
+  <div class="table-card fade-in">
+    <div class="chart-header">
+      <div>
+        <div class="chart-title">Audit Records</div>
+        <div class="chart-subtitle" id="table-count">Showing — records</div>
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table id="data-table">
+        <thead>
+          <tr>
+            <th data-col="serial">#</th>
+            <th data-col="round">Round</th>
+            <th data-col="month">Month</th>
+            <th data-col="outlet_code">Code</th>
+            <th data-col="outlet_type">Type</th>
+            <th data-col="region">Region</th>
+            <th data-col="governorate">Gov.</th>
+            <th data-col="overall_score">Score</th>
+            <th data-col="avail_compliance">Avail.</th>
+            <th data-col="sos_compliance">SoS</th>
+            <th data-col="sz_compliance">Strike</th>
+            <th data-col="total_incentive">Incentive</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /tab-overview -->
+
+<!-- MAP TAB -->
+<div class="tab-panel" id="tab-map">
+  <div style="max-width:1600px;margin:0 auto;padding:20px 24px 40px">
+
+    <!-- Map filters -->
+    <div class="filters-bar" style="margin-bottom:16px">
+      <div class="filter-group">
+        <label for="m-round">Round</label>
+        <select id="m-round">
+          <option value="all">All Rounds</option>
+          <option value="79">Round 79 — April</option>
+          <option value="80">Round 80 — May</option>
+          <option value="81">Round 81 — June</option>
+          <option value="82">Round 82 — July</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="m-type">Outlet Type</label>
+        <select id="m-type">
+          <option value="all">All Types</option>
+          <option value="Impulse &amp; Grocery">Impulse &amp; Grocery</option>
+          <option value="Gas Station">Gas Station</option>
+          <option value="Supermarket">Supermarket</option>
+          <option value="Bazar">Bazar</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="m-compliance">Compliance</label>
+        <select id="m-compliance">
+          <option value="all">All</option>
+          <option value="compliant">✓ Compliant only</option>
+          <option value="non">✗ Non-compliant only</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="m-color">Colour by</label>
+        <select id="m-color">
+          <option value="type">Outlet Type</option>
+          <option value="score">Compliance Score</option>
+          <option value="incentive">Incentive EGP</option>
+        </select>
+      </div>
+      <button id="btn-map-reset" style="margin-left:auto;background:rgba(232,0,28,.12);border:1px solid rgba(232,0,28,.3);color:#e8001c;padding:7px 18px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">↺ Reset</button>
+    </div>
+
+    <!-- Map container -->
+    <div id="map-container">
+      <div id="leaflet-map"></div>
+      <!-- Stats overlay -->
+      <div class="map-stats-bar">
+        <div class="map-stat-pill">Outlets: <span id="map-count">—</span></div>
+        <div class="map-stat-pill">Avg Score: <span id="map-avg">—</span></div>
+        <div class="map-stat-pill">Total Incentive: <span id="map-incentive">—</span> EGP</div>
+      </div>
+      <!-- Legend -->
+      <div class="map-legend" id="map-legend">
+        <h4>Outlet Type</h4>
+        <div class="legend-row"><div class="legend-dot" style="background:#e8001c"></div>Impulse &amp; Grocery</div>
+        <div class="legend-row"><div class="legend-dot" style="background:#3b82f6"></div>Gas Station</div>
+        <div class="legend-row"><div class="legend-dot" style="background:#f5c518"></div>Supermarket</div>
+        <div class="legend-row"><div class="legend-dot" style="background:#8b5cf6"></div>Bazar</div>
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08)">
+          <h4 style="margin-bottom:8px">Circle size</h4>
+          <div class="legend-row" style="font-size:10px;color:#64748b">● Large = High incentive</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><!-- /tab-map -->
+
+</main>
+
+<footer>
+  <p>VIP Audit Dashboard · Data source: <strong>Q2-2026 NewContract</strong> sheet · Red Bull Egypt Field Operations · 
+  Generated <span id="footer-date">2026</span> · 
+  <a href="https://github.com/amrmaherhelal87-Dalida/vip-audit-dashboard" target="_blank">GitHub ↗</a></p>
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════════
+   CHART DEFAULTS
+═══════════════════════════════════════════════ */
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+Chart.defaults.font.family = "'Inter', sans-serif";
+
+const RED    = '#e8001c';
+const GOLD   = '#f5c518';
+const BLUE   = '#3b82f6';
+const GREEN  = '#10b981';
+const PURPLE = '#8b5cf6';
+const ORANGE = '#f97316';
+const TEAL   = '#06b6d4';
+const PINK   = '#ec4899';
+
+const OUTLET_COLORS = {
+  'Impulse & Grocery': RED,
+  'Gas Station':       BLUE,
+  'Supermarket':       GOLD,
+  'Bazar':             PURPLE,
+};
+
+/* ═══════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════ */
+let ALL_DATA = [];
+let charts = {};
+
+/* ═══════════════════════════════════════════════
+   FILTERS
+═══════════════════════════════════════════════ */
+function getFilters() {
+  return {
+    round:  document.getElementById('f-round').value,
+    type:   document.getElementById('f-type').value,
+    region: document.getElementById('f-region').value,
+  };
+}
+function applyFilters(data) {
+  const f = getFilters();
+  return data.filter(r => {
+    if (f.round  !== 'all' && String(r.round)       !== f.round)  return false;
+    if (f.type   !== 'all' && r.outlet_type          !== f.type)   return false;
+    if (f.region !== 'all' && r.region               !== f.region) return false;
+    return true;
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   KPI CARDS
+═══════════════════════════════════════════════ */
+function updateKPIs(data) {
+  const total = data.length;
+  const scores = data.map(r => r.overall_score).filter(v => typeof v === 'number');
+  const avg = scores.length ? scores.reduce((a,b)=>a+b,0)/scores.length : 0;
+  const incentiveTotal = data.reduce((s,r) => s + (typeof r.total_incentive === 'number' ? r.total_incentive : 0), 0);
+  const availC = data.filter(r => r.avail_compliance === 1).length;
+
+  document.getElementById('k-total').textContent     = total.toLocaleString();
+  document.getElementById('k-score').textContent     = (avg*100).toFixed(1) + '%';
+  document.getElementById('k-score-sub').textContent = `From ${scores.length.toLocaleString()} scored audits`;
+  document.getElementById('k-incentive').textContent = incentiveTotal.toLocaleString(undefined,{maximumFractionDigits:0}) + ' EGP';
+  document.getElementById('k-avail').textContent     = total ? ((availC/total)*100).toFixed(1)+'%' : '—';
+  document.getElementById('k-avail-sub').textContent = `${availC.toLocaleString()} of ${total.toLocaleString()} outlets fully stocked`;
+}
+
+/* ═══════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════ */
+function avgScore(arr) {
+  const vals = arr.map(r=>r.overall_score).filter(v=>typeof v==='number');
+  return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
+}
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+function ctx(id) { return document.getElementById(id).getContext('2d'); }
+
+const CHART_OPT = {
+  responsive: true, maintainAspectRatio: false,
+  plugins: { legend: { display: false }, tooltip: { callbacks: {} } },
+  animation: { duration: 700, easing: 'easeOutQuart' },
+};
+
+/* ═══════════════════════════════════════════════
+   CHARTS
+═══════════════════════════════════════════════ */
+function buildTrend(data) {
+  destroyChart('c-trend');
+  const rounds = [79,80,81,82];
+  const months = ['April','May','June','July'];
+  const avgScores = rounds.map(rnd => {
+    const sub = data.filter(r => r.round === rnd);
+    return +(avgScore(sub)*100).toFixed(1);
+  });
+  const counts = rounds.map(rnd => data.filter(r => r.round === rnd).length);
+  charts['c-trend'] = new Chart(ctx('c-trend'), {
+    type: 'line',
+    data: {
+      labels: months,
+      datasets: [{
+        label: 'Avg Compliance %',
+        data: avgScores,
+        borderColor: RED,
+        backgroundColor: 'rgba(232,0,28,0.12)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 6, pointBackgroundColor: RED,
+        borderWidth: 2.5,
+      },{
+        label: 'Audit Count',
+        data: counts,
+        borderColor: GOLD,
+        borderDash: [4,4],
+        backgroundColor: 'transparent',
+        tension: 0.4,
+        pointRadius: 5, pointBackgroundColor: GOLD,
+        borderWidth: 1.5,
+        yAxisID: 'y2',
+      }]
+    },
+    options: {
+      ...CHART_OPT,
+      plugins: {
+        legend: { display: true, labels: { color: '#94a3b8', boxWidth: 12, font: {size:11} } },
+        tooltip: { mode: 'index', intersect: false }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.05)' } },
+        y: {
+          min: 0, max: 100,
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          ticks: { callback: v => v + '%' }
+        },
+        y2: {
+          position: 'right', grid: { display: false },
+          ticks: { color: GOLD }
+        }
+      }
+    }
+  });
+}
+
+function buildOutletChart(data) {
+  destroyChart('c-outlet');
+  const types = ['Impulse & Grocery','Supermarket','Gas Station','Bazar'];
+  const avgs = types.map(t => {
+    const sub = data.filter(r=>r.outlet_type===t);
+    return +(avgScore(sub)*100).toFixed(1);
+  });
+  charts['c-outlet'] = new Chart(ctx('c-outlet'), {
+    type: 'bar',
+    data: {
+      labels: types,
+      datasets:[{
+        data: avgs,
+        backgroundColor: types.map(t => OUTLET_COLORS[t] + '99'),
+        borderColor: types.map(t => OUTLET_COLORS[t]),
+        borderWidth: 2, borderRadius: 8,
+      }]
+    },
+    options: {
+      ...CHART_OPT,
+      indexAxis: 'y',
+      scales: {
+        x: { min:0, max:100, grid:{color:'rgba(255,255,255,0.05)'}, ticks:{callback:v=>v+'%'} },
+        y: { grid:{display:false} }
+      },
+      plugins: {
+        legend:{display:false},
+        tooltip:{callbacks:{label: ctx => ` ${ctx.parsed.x.toFixed(1)}% avg compliance`}}
+      }
+    }
+  });
+}
+
+function buildRegionChart(data) {
+  destroyChart('c-region');
+  const regions = ['Delta','Cairo','Alexandria','Giza','Canal','Sinai','Red Sea'];
+  const avgs = regions.map(reg => {
+    const sub = data.filter(r=>r.region===reg);
+    return sub.length ? +(avgScore(sub)*100).toFixed(1) : 0;
+  });
+  const totals = regions.map(reg =>
+    data.filter(r=>r.region===reg).reduce((s,r)=>s+(typeof r.total_incentive==='number'?r.total_incentive:0),0)
+  );
+  const colors = [RED,BLUE,GOLD,GREEN,PURPLE,ORANGE,TEAL];
+  charts['c-region'] = new Chart(ctx('c-region'), {
+    type: 'bar',
+    data: {
+      labels: regions,
+      datasets:[{
+        label: 'Avg Compliance %',
+        data: avgs,
+        backgroundColor: colors.map(c=>c+'88'),
+        borderColor: colors,
+        borderWidth: 2, borderRadius: 8,
+        yAxisID: 'y',
+      },{
+        label: 'Total Incentive (EGP)',
+        data: totals,
+        type: 'line',
+        borderColor: GOLD,
+        backgroundColor: 'rgba(245,197,24,0.1)',
+        fill: true, tension: 0.4,
+        pointRadius: 5, pointBackgroundColor: GOLD,
+        borderWidth: 2,
+        yAxisID: 'y2',
+      }]
+    },
+    options: {
+      ...CHART_OPT,
+      plugins: {
+        legend:{display:true,labels:{color:'#94a3b8',boxWidth:12,font:{size:11}}},
+        tooltip:{mode:'index',intersect:false}
+      },
+      scales: {
+        x:{grid:{color:'rgba(255,255,255,0.05)'}},
+        y:{min:0,max:100,grid:{color:'rgba(255,255,255,0.05)'},ticks:{callback:v=>v+'%'}},
+        y2:{position:'right',grid:{display:false},ticks:{color:GOLD,callback:v=>v.toLocaleString()}}
+      }
+    }
+  });
+}
+
+function buildAvailChart(data) {
+  destroyChart('c-avail');
+  const rounds = [79,80,81,82];
+  const months = ['April','May','June','July'];
+  const compliant = rounds.map(r => data.filter(d=>d.round===r&&d.avail_compliance===1).length);
+  const nonComp   = rounds.map(r => data.filter(d=>d.round===r&&d.avail_compliance===0).length);
+  charts['c-avail'] = new Chart(ctx('c-avail'), {
+    type: 'bar',
+    data: {
+      labels: months,
+      datasets:[
+        {label:'Compliant',  data:compliant, backgroundColor:GREEN+'99', borderColor:GREEN, borderWidth:2, borderRadius:6, stack:'a'},
+        {label:'Non-Compliant', data:nonComp, backgroundColor:RED+'99', borderColor:RED, borderWidth:2, borderRadius:6, stack:'a'},
+      ]
+    },
+    options: {
+      ...CHART_OPT,
+      plugins:{legend:{display:true,labels:{color:'#94a3b8',boxWidth:12,font:{size:11}}}},
+      scales:{
+        x:{grid:{display:false},stacked:true},
+        y:{grid:{color:'rgba(255,255,255,0.05)'},stacked:true}
+      }
+    }
+  });
+}
+
+function buildIncentiveChart(data) {
+  destroyChart('c-incentive');
+  const types = ['Impulse & Grocery','Supermarket','Gas Station','Bazar'];
+  const totals = types.map(t=>
+    data.filter(r=>r.outlet_type===t).reduce((s,r)=>s+(typeof r.total_incentive==='number'?r.total_incentive:0),0)
+  );
+  charts['c-incentive'] = new Chart(ctx('c-incentive'), {
+    type: 'doughnut',
+    data:{
+      labels:types,
+      datasets:[{
+        data:totals,
+        backgroundColor:['rgba(232,0,28,.7)','rgba(245,197,24,.7)','rgba(59,130,246,.7)','rgba(139,92,246,.7)'],
+        borderColor:['#e8001c','#f5c518','#3b82f6','#8b5cf6'],
+        borderWidth:2, hoverOffset:12,
+      }]
+    },
+    options:{
+      ...CHART_OPT,
+      cutout:'65%',
+      plugins:{
+        legend:{display:true,position:'right',labels:{color:'#94a3b8',boxWidth:12,font:{size:11},padding:10}},
+        tooltip:{callbacks:{label:c=>`${c.label}: ${c.parsed.toLocaleString()} EGP`}}
+      }
+    }
+  });
+}
+
+function buildSOSChart(data) {
+  destroyChart('c-sos');
+  const types = ['Impulse & Grocery','Supermarket','Gas Station','Bazar'];
+  const comp    = types.map(t => data.filter(r=>r.outlet_type===t&&r.sos_compliance===1).length);
+  const nonComp = types.map(t => data.filter(r=>r.outlet_type===t&&r.sos_compliance===0).length);
+  charts['c-sos'] = new Chart(ctx('c-sos'), {
+    type: 'bar',
+    data:{
+      labels:types.map(t=>t.split('&')[0].trim()),
+      datasets:[
+        {label:'Compliant',data:comp,backgroundColor:GREEN+'99',borderColor:GREEN,borderWidth:2,borderRadius:5,stack:'s'},
+        {label:'Non-Compliant',data:nonComp,backgroundColor:RED+'99',borderColor:RED,borderWidth:2,borderRadius:5,stack:'s'},
+      ]
+    },
+    options:{
+      ...CHART_OPT,
+      plugins:{legend:{display:true,labels:{color:'#94a3b8',boxWidth:10,font:{size:10}}}},
+      scales:{x:{grid:{display:false},stacked:true},y:{grid:{color:'rgba(255,255,255,0.05)'},stacked:true}}
+    }
+  });
+}
+
+function buildSZChart(data) {
+  destroyChart('c-sz');
+  const types = ['Impulse & Grocery','Supermarket','Gas Station'];
+  const comp    = types.map(t => data.filter(r=>r.outlet_type===t&&r.sz_compliance===1).length);
+  const nonComp = types.map(t => data.filter(r=>r.outlet_type===t&&r.sz_compliance===0).length);
+  charts['c-sz'] = new Chart(ctx('c-sz'), {
+    type:'bar',
+    data:{
+      labels:types.map(t=>t.split('&')[0].trim()),
+      datasets:[
+        {label:'Compliant',data:comp,backgroundColor:BLUE+'99',borderColor:BLUE,borderWidth:2,borderRadius:5,stack:'s'},
+        {label:'Non-Compliant',data:nonComp,backgroundColor:ORANGE+'99',borderColor:ORANGE,borderWidth:2,borderRadius:5,stack:'s'},
+      ]
+    },
+    options:{
+      ...CHART_OPT,
+      plugins:{legend:{display:true,labels:{color:'#94a3b8',boxWidth:10,font:{size:10}}}},
+      scales:{x:{grid:{display:false},stacked:true},y:{grid:{color:'rgba(255,255,255,0.05)'},stacked:true}}
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   TABLE
+═══════════════════════════════════════════════ */
+let sortCol = 'serial', sortAsc = true;
+function outletPill(type) {
+  const cls = { 'Impulse & Grocery':'pill-red','Gas Station':'pill-blue','Supermarket':'pill-gold','Bazar':'pill-purple' };
+  return `<span class="pill ${cls[type]||'pill-blue'}">${type||'—'}</span>`;
+}
+function compPill(v) {
+  if (v === 1) return `<span class="pill pill-green">✓</span>`;
+  if (v === 0) return `<span class="pill pill-red">✗</span>`;
+  return '<span style="color:#475569">—</span>';
+}
+function scoreFill(v) {
+  if (typeof v !== 'number') return '—';
+  const pct = (v*100).toFixed(0);
+  const col = v >= 0.7 ? '#10b981' : v >= 0.5 ? '#f5c518' : '#e8001c';
+  return `<span style="margin-right:6px;font-size:11px;color:${col}">${pct}%</span>
+  <span class="score-bar-wrap"><span class="score-bar-fill" style="width:${pct}%;background:${col}"></span></span>`;
+}
+
+function renderTable(data) {
+  const tbody = document.getElementById('table-body');
+  const show = data.slice(0, 200);
+  document.getElementById('table-count').textContent = `Showing ${show.length.toLocaleString()} of ${data.length.toLocaleString()} records`;
+  tbody.innerHTML = show.map(r => `<tr>
+    <td style="color:var(--muted)">${r.serial||'—'}</td>
+    <td><span class="badge badge-gold" style="font-size:10px">R${r.round||'—'}</span></td>
+    <td style="color:var(--muted)">${r.month||'—'}</td>
+    <td style="font-family:monospace;color:var(--muted)">${r.outlet_code||'—'}</td>
+    <td>${outletPill(r.outlet_type)}</td>
+    <td>${r.region||'—'}</td>
+    <td>${r.governorate||'—'}</td>
+    <td>${scoreFill(r.overall_score)}</td>
+    <td>${compPill(r.avail_compliance)}</td>
+    <td>${compPill(r.sos_compliance)}</td>
+    <td>${compPill(r.sz_compliance)}</td>
+    <td style="color:var(--gold);font-weight:600">${typeof r.total_incentive === 'number' ? r.total_incentive.toFixed(1) + ' EGP' : '—'}</td>
+  </tr>`).join('');
+}
+
+/* ═══════════════════════════════════════════════
+   SORT HEADER
+═══════════════════════════════════════════════ */
+document.querySelectorAll('#data-table thead th').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.col;
+    if (sortCol === col) sortAsc = !sortAsc; else { sortCol = col; sortAsc = true; }
+    const filtered = applyFilters(ALL_DATA);
+    filtered.sort((a,b) => {
+      const av = a[col], bv = b[col];
+      if (av === null || av === undefined) return 1;
+      if (bv === null || bv === undefined) return -1;
+      return sortAsc ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
+    });
+    renderTable(filtered);
+  });
+});
+
+/* ═══════════════════════════════════════════════
+   FULL RENDER
+═══════════════════════════════════════════════ */
+function render() {
+  const data = applyFilters(ALL_DATA);
+  updateKPIs(data);
+  buildTrend(data);
+  buildOutletChart(data);
+  buildRegionChart(data);
+  buildAvailChart(data);
+  buildIncentiveChart(data);
+  buildSOSChart(data);
+  buildSZChart(data);
+  renderTable(data);
+}
+
+/* ═══════════════════════════════════════════════
+   EVENT LISTENERS
+═══════════════════════════════════════════════ */
+['f-round','f-type','f-region'].forEach(id =>
+  document.getElementById(id).addEventListener('change', render)
+);
+document.getElementById('btn-reset').addEventListener('click', () => {
+  ['f-round','f-type','f-region'].forEach(id => document.getElementById(id).value = 'all');
+  render();
+});
+
+/* ═══════════════════════════════════════════════
+   LOAD DATA
+═══════════════════════════════════════════════ */
+async function init() {
+  try {
+    const resp = await fetch('data/vip_data.json');
+    ALL_DATA = await resp.json();
+    document.getElementById('last-updated').textContent =
+      'Updated: ' + new Date().toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'});
+    document.getElementById('footer-date').textContent = new Date().getFullYear();
+    render();
+    document.getElementById('loading').style.display = 'none';
+    const app = document.getElementById('app');
+    app.style.opacity = '1';
+    app.style.transition = 'opacity .4s ease';
+  } catch(e) {
+    document.getElementById('loading').innerHTML =
+      '<p style="color:#e8001c">⚠ Could not load data/vip_data.json<br><small style="color:#94a3b8">Serve this page from a web server (not file://)</small></p>';
+    console.error(e);
+  }
+}
+
+init();
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════
+   TAB SWITCHING
+═══════════════════════════════════════════════ */
+let mapInitialised = false;
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    if (tab === 'map' && !mapInitialised) {
+      initMap();
+      mapInitialised = true;
+    }
+    if (tab === 'map') updateMap();
+  });
+});
+
+/* ═══════════════════════════════════════════════
+   INTERACTIVE MAP
+═══════════════════════════════════════════════ */
+let leafletMap = null;
+let markerCluster = null;
+
+const TYPE_COLORS = {
+  'Impulse & Grocery': '#e8001c',
+  'Gas Station':       '#3b82f6',
+  'Supermarket':       '#f5c518',
+  'Bazar':             '#8b5cf6',
+};
+
+function scoreColor(s) { return s>=0.75?'#10b981':s>=0.5?'#f5c518':'#e8001c'; }
+function incentiveColor(v) { return v>=20?'#10b981':v>=10?'#3b82f6':v>=5?'#f5c518':'#e8001c'; }
+
+/**
+ * Smart coordinate resolver for Egypt.
+ * Data has POINT_X (stored as r.lat) and POINT_Y (stored as r.lon).
+ * Standard GIS: POINT_X = longitude, POINT_Y = latitude.
+ * BUT some field devices swapped the fields — so a few outlets end up
+ * "in the sea" with the standard convention.
+ *
+ * Fix: Egypt's mainland latitude is ALWAYS ≤ 31.65°N.
+ * If standard convention places a point above that, swap automatically.
+ *
+ * Egypt bounding box: lat 22–31.65°N, lon 24.7–37°E
+ */
+const EG = { latMin:22, latMax:31.65, lonMin:24.7, lonMax:37.0 };
+function inEgypt(lat, lon) {
+  return lat>=EG.latMin && lat<=EG.latMax && lon>=EG.lonMin && lon<=EG.lonMax;
+}
+function resolveCoords(r) {
+  const px = parseFloat(r.lat);   // POINT_X
+  const py = parseFloat(r.lon);   // POINT_Y
+  if (isNaN(px) || isNaN(py)) return null;
+  // Standard GIS convention: POINT_X = longitude, POINT_Y = latitude
+  const latStd = py, lonStd = px;
+  // Swapped convention: POINT_X = latitude, POINT_Y = longitude
+  const latSwp = px, lonSwp = py;
+  const stdOk  = inEgypt(latStd, lonStd);
+  const swpOk  = inEgypt(latSwp, lonSwp);
+  if (stdOk && !swpOk) return [latStd, lonStd];   // standard only → use standard
+  if (swpOk && !stdOk) return [latSwp, lonSwp];   // swapped only  → auto-fix
+  if (stdOk && swpOk)  return [latStd, lonStd];   // both valid    → trust standard
+  return null;                                     // neither valid → skip
+}
+
+function makeCircle(color, radius) {
+  return L.divIcon({
+    className: '',
+    html: `<div style="width:${radius*2}px;height:${radius*2}px;background:${color};border-radius:50%;border:2px solid rgba(255,255,255,0.4);box-shadow:0 0 ${radius}px ${color}66;opacity:0.85"></div>`,
+    iconSize: [radius*2, radius*2], iconAnchor: [radius, radius], popupAnchor: [0, -radius],
+  });
+}
+
+function getMapFilters() {
+  return {
+    round:      document.getElementById('m-round').value,
+    type:       document.getElementById('m-type').value,
+    compliance: document.getElementById('m-compliance').value,
+    colorBy:    document.getElementById('m-color').value,
+  };
+}
+
+function applyMapFilters(data) {
+  const f = getMapFilters();
+  return data.filter(r => {
+    if (!r.lat || !r.lon) return false;
+    if (f.round !== 'all' && String(r.round) !== f.round) return false;
+    if (f.type  !== 'all' && r.outlet_type   !== f.type)  return false;
+    if (f.compliance === 'compliant' && r.avail_compliance !== 1) return false;
+    if (f.compliance === 'non'       && r.avail_compliance !== 0) return false;
+    return true;
+  });
+}
+
+function initMap() {
+  leafletMap = L.map('leaflet-map', { center:[26.8,30.8], zoom:6, preferCanvas:true });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OSM &copy; CARTO', subdomains:'abcd', maxZoom:19,
+  }).addTo(leafletMap);
+  markerCluster = L.markerClusterGroup({ maxClusterRadius:50, showCoverageOnHover:false });
+  leafletMap.addLayer(markerCluster);
+}
+
+function updateMap() {
+  if (!leafletMap) return;
+  const f = getMapFilters();
+  const data = applyMapFilters(ALL_DATA);
+
+  // Legend
+  const legend = document.getElementById('map-legend');
+  if (f.colorBy === 'type') {
+    legend.innerHTML = '<h4>Outlet Type</h4>' +
+      '<div class="legend-row"><div class="legend-dot" style="background:#e8001c"></div>Impulse &amp; Grocery</div>' +
+      '<div class="legend-row"><div class="legend-dot" style="background:#3b82f6"></div>Gas Station</div>' +
+      '<div class="legend-row"><div class="legend-dot" style="background:#f5c518"></div>Supermarket</div>' +
+      '<div class="legend-row"><div class="legend-dot" style="background:#8b5cf6"></div>Bazar</div>';
+  } else if (f.colorBy === 'score') {
+    legend.innerHTML = '<h4>Compliance Score</h4>' +
+      '<div class="legend-row"><div class="legend-dot" style="background:#10b981"></div>&ge;75% High</div>' +
+      '<div class="legend-row"><div class="legend-dot" style="background:#f5c518"></div>50–75% Mid</div>' +
+      '<div class="legend-row"><div class="legend-dot" style="background:#e8001c"></div>&lt;50% Low</div>';
+  } else {
+    legend.innerHTML = '<h4>Incentive EGP</h4>' +
+      '<div class="legend-row"><div class="legend-dot" style="background:#10b981"></div>&ge;20 EGP</div>' +
+      '<div class="legend-row"><div class="legend-dot" style="background:#3b82f6"></div>10–20 EGP</div>' +
+      '<div class="legend-row"><div class="legend-dot" style="background:#f5c518"></div>5–10 EGP</div>' +
+      '<div class="legend-row"><div class="legend-dot" style="background:#e8001c"></div>&lt;5 EGP</div>';
+  }
+
+  markerCluster.clearLayers();
+  const batch = [];
+
+  data.forEach(r => {
+    const coords = resolveCoords(r);
+    if (!coords) return;
+    const [lat, lon] = coords;
+
+    const incentive = typeof r.total_incentive==='number' ? r.total_incentive : 0;
+    const scoreVal  = typeof r.overall_score==='number'   ? r.overall_score   : 0;
+    const radius    = Math.max(5, Math.min(14, 5 + incentive * 0.28));
+
+    let color;
+    if (f.colorBy==='type')      color = TYPE_COLORS[r.outlet_type] || '#94a3b8';
+    else if (f.colorBy==='score') color = scoreColor(scoreVal);
+    else                          color = incentiveColor(incentive);
+
+    const typeColor = TYPE_COLORS[r.outlet_type] || '#94a3b8';
+    const scorePct  = (scoreVal*100).toFixed(1)+'%';
+    const scoreCl   = scoreColor(scoreVal);
+    const avStr = r.avail_compliance===1 ? '✓ Compliant' : '✗ Non-compliant';
+    const avCl  = r.avail_compliance===1 ? '#10b981' : '#e8001c';
+
+    const popup = `<div class="popup-title">${r.outlet_code||'—'}</div>
+      <div class="popup-score" style="color:${scoreCl}">${scorePct}</div>
+      <div class="popup-row"><span>Type</span><strong><span style="color:${typeColor}">●</span> ${r.outlet_type}</strong></div>
+      <div class="popup-row"><span>Round</span><strong>R${r.round} — ${r.month}</strong></div>
+      <div class="popup-row"><span>Region</span><strong>${r.region} / ${r.governorate}</strong></div>
+      <div class="popup-row"><span>Availability</span><strong style="color:${avCl}">${avStr}</strong></div>
+      <div class="popup-row"><span>SoS</span><strong style="color:${r.sos_compliance===1?'#10b981':'#e8001c'}">${r.sos_compliance===1?'✓':'✗'}</strong></div>
+      <div class="popup-row"><span>Incentive</span><strong style="color:#f5c518">${incentive} EGP</strong></div>`;
+
+    batch.push(L.marker([lat,lon],{icon:makeCircle(color,radius)}).bindPopup(popup,{maxWidth:260,closeButton:false}));
+  });
+
+  markerCluster.addLayers(batch);
+
+  // Stats
+  document.getElementById('map-count').textContent = data.length.toLocaleString();
+  const sc = data.map(r=>r.overall_score).filter(v=>typeof v==='number');
+  document.getElementById('map-avg').textContent = sc.length ? (sc.reduce((a,b)=>a+b,0)/sc.length*100).toFixed(1)+'%' : '—';
+  document.getElementById('map-incentive').textContent = data.reduce((s,r)=>s+(typeof r.total_incentive==='number'?r.total_incentive:0),0).toLocaleString(undefined,{maximumFractionDigits:0});
+
+  if (batch.length && markerCluster.getBounds().isValid())
+    leafletMap.fitBounds(markerCluster.getBounds(), {padding:[40,40], maxZoom:12});
+}
+
+['m-round','m-type','m-compliance','m-color'].forEach(id =>
+  document.getElementById(id).addEventListener('change', () => { if(mapInitialised) updateMap(); })
+);
+document.getElementById('btn-map-reset').addEventListener('click', () => {
+  ['m-round','m-type','m-compliance'].forEach(id => document.getElementById(id).value='all');
+  document.getElementById('m-color').value = 'type';
+  if (mapInitialised) updateMap();
+});
+</script>
+</body>
+</html>
