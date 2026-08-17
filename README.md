@@ -40,4 +40,4 @@ vip-audit-dashboard/
 Exported and normalised via `export_data.py`
 
 ---
-*Red Bull Egypt Field Operations Â· Q2 2026*
+*Red Bull Egypt Field Operations · Q2 2026 · Last deployed: 2026-08-17 12:26*
