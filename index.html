@@ -217,6 +217,17 @@
     .chart-wrap { position: relative; height: 260px; }
     .chart-wrap-sm { position: relative; height: 220px; }
 
+    .chart-tabs { display: flex; gap: 6px; background: rgba(255,255,255,0.04); border-radius: 8px; padding: 3px; }
+    .chart-tab-btn {
+      background: transparent; border: none; color: var(--muted);
+      font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 6px;
+      cursor: pointer; transition: all .15s ease; font-family: inherit;
+    }
+    .chart-tab-btn:hover { color: var(--text); }
+    .chart-tab-btn.active { background: var(--red); color: #fff; }
+    .chart-tab-panel { display: none; }
+    .chart-tab-panel.active { display: block; }
+
     /* ── TABLE ── */
     .table-card {
       background: var(--surface);
@@ -521,25 +532,24 @@
       </div>
       <div class="chart-wrap"><canvas id="c-outlet"></canvas></div>
     </div>
-    <!-- Region -->
+    <!-- Region / Governorate (tabbed) -->
     <div class="chart-card chart-wide fade-in" style="animation-delay:.15s">
       <div class="chart-header">
         <div>
-          <div class="chart-title">Regional Performance</div>
-          <div class="chart-subtitle">Avg compliance % and total incentive EGP by region</div>
+          <div class="chart-title" id="regiongov-title">Regional Performance</div>
+          <div class="chart-subtitle" id="regiongov-subtitle">Avg compliance % and total incentive EGP by region</div>
+        </div>
+        <div class="chart-tabs">
+          <button class="chart-tab-btn active" data-regiongov-tab="region">Region</button>
+          <button class="chart-tab-btn" data-regiongov-tab="gov">Governorate</button>
         </div>
       </div>
-      <div class="chart-wrap"><canvas id="c-region"></canvas></div>
-    </div>
-    <!-- Governorate -->
-    <div class="chart-card chart-wide fade-in" style="animation-delay:.18s">
-      <div class="chart-header">
-        <div>
-          <div class="chart-title">Governorate Performance</div>
-          <div class="chart-subtitle">Avg compliance % and total incentive EGP by governorate</div>
-        </div>
+      <div class="chart-tab-panel active" id="regiongov-panel-region">
+        <div class="chart-wrap"><canvas id="c-region"></canvas></div>
       </div>
-      <div class="chart-wrap"><canvas id="c-gov"></canvas></div>
+      <div class="chart-tab-panel" id="regiongov-panel-gov">
+        <div class="chart-wrap"><canvas id="c-gov"></canvas></div>
+      </div>
     </div>
   </div>
 
@@ -1039,6 +1049,12 @@ function buildAvailChart(data) {
   const months = ['April','May','June','July'];
   const compliant = rounds.map(r => data.filter(d=>d.round===r&&d.avail_compliance===1).length);
   const nonComp   = rounds.map(r => data.filter(d=>d.round===r&&d.avail_compliance===0).length);
+  const roundTotals = rounds.map((r,i) => compliant[i]+nonComp[i]);
+  const pctLabel = (value, idx) => {
+    const total = roundTotals[idx];
+    const pct = total ? Math.round(value/total*100) : 0;
+    return `${value.toLocaleString()} (${pct}%)`;
+  };
   charts['c-avail'] = new Chart(ctx('c-avail'), {
     type: 'bar',
     data: {
@@ -1050,7 +1066,14 @@ function buildAvailChart(data) {
     },
     options: {
       ...CHART_OPT,
-      plugins:{legend:{display:true,labels:{color:'#94a3b8',boxWidth:12,font:{size:11}}}},
+      plugins:{
+        legend:{display:true,labels:{color:'#94a3b8',boxWidth:12,font:{size:11}}},
+        tooltip:{
+          callbacks:{
+            label: c => `${c.dataset.label}: ${pctLabel(c.parsed.y, c.dataIndex)}`
+          }
+        }
+      },
       scales:{
         x:{grid:{display:false},stacked:true},
         y:{grid:{color:'rgba(255,255,255,0.05)'},stacked:true}
@@ -1081,7 +1104,11 @@ function buildIncentiveChart(data) {
       cutout:'65%',
       plugins:{
         legend:{display:true,position:'right',labels:{color:'#94a3b8',boxWidth:12,font:{size:11},padding:10}},
-        tooltip:{callbacks:{label:c=>`${c.label}: ${c.parsed.toLocaleString()} EGP`}}
+        tooltip:{callbacks:{label:c=>{
+          const total = c.dataset.data.reduce((a,b)=>a+b,0);
+          const pct = total ? (c.parsed/total*100).toFixed(1) : 0;
+          return `${c.label}: ${c.parsed.toLocaleString()} EGP (${pct}%)`;
+        }}}
       }
     }
   });
@@ -1092,6 +1119,12 @@ function buildSOSChart(data) {
   const types = ['Impulse & Grocery','Supermarket','Gas Station','Bazar'];
   const comp    = types.map(t => data.filter(r=>r.outlet_type===t&&r.sos_compliance===1).length);
   const nonComp = types.map(t => data.filter(r=>r.outlet_type===t&&r.sos_compliance===0).length);
+  const typeTotals = types.map((t,i) => comp[i]+nonComp[i]);
+  const pctLabel = (value, idx) => {
+    const total = typeTotals[idx];
+    const pct = total ? Math.round(value/total*100) : 0;
+    return `${value.toLocaleString()} (${pct}%)`;
+  };
   charts['c-sos'] = new Chart(ctx('c-sos'), {
     type: 'bar',
     data:{
@@ -1103,7 +1136,14 @@ function buildSOSChart(data) {
     },
     options:{
       ...CHART_OPT,
-      plugins:{legend:{display:true,labels:{color:'#94a3b8',boxWidth:10,font:{size:10}}}},
+      plugins:{
+        legend:{display:true,labels:{color:'#94a3b8',boxWidth:10,font:{size:10}}},
+        tooltip:{
+          callbacks:{
+            label: c => `${c.dataset.label}: ${pctLabel(c.parsed.y, c.dataIndex)}`
+          }
+        }
+      },
       scales:{x:{grid:{display:false},stacked:true},y:{grid:{color:'rgba(255,255,255,0.05)'},stacked:true}}
     }
   });
@@ -1114,6 +1154,12 @@ function buildSZChart(data) {
   const types = ['Impulse & Grocery','Supermarket','Gas Station'];
   const comp    = types.map(t => data.filter(r=>r.outlet_type===t&&r.sz_compliance===1).length);
   const nonComp = types.map(t => data.filter(r=>r.outlet_type===t&&r.sz_compliance===0).length);
+  const typeTotals = types.map((t,i) => comp[i]+nonComp[i]);
+  const pctLabel = (value, idx) => {
+    const total = typeTotals[idx];
+    const pct = total ? Math.round(value/total*100) : 0;
+    return `${value.toLocaleString()} (${pct}%)`;
+  };
   charts['c-sz'] = new Chart(ctx('c-sz'), {
     type:'bar',
     data:{
@@ -1125,7 +1171,14 @@ function buildSZChart(data) {
     },
     options:{
       ...CHART_OPT,
-      plugins:{legend:{display:true,labels:{color:'#94a3b8',boxWidth:10,font:{size:10}}}},
+      plugins:{
+        legend:{display:true,labels:{color:'#94a3b8',boxWidth:10,font:{size:10}}},
+        tooltip:{
+          callbacks:{
+            label: c => `${c.dataset.label}: ${pctLabel(c.parsed.y, c.dataIndex)}`
+          }
+        }
+      },
       scales:{x:{grid:{display:false},stacked:true},y:{grid:{color:'rgba(255,255,255,0.05)'},stacked:true}}
     }
   });
@@ -1205,7 +1258,30 @@ function render() {
   buildSOSChart(data);
   buildSZChart(data);
   renderTable(data);
+  if (mapInitialised) updateMap();
 }
+
+/* ═══════════════════════════════════════════════
+   REGION / GOVERNORATE CHART TABS
+═══════════════════════════════════════════════ */
+document.querySelectorAll('[data-regiongov-tab]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const which = btn.dataset.regiongovTab;
+    document.querySelectorAll('[data-regiongov-tab]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('regiongov-panel-region').classList.toggle('active', which === 'region');
+    document.getElementById('regiongov-panel-gov').classList.toggle('active', which === 'gov');
+    document.getElementById('regiongov-title').textContent =
+      which === 'region' ? 'Regional Performance' : 'Governorate Performance';
+    document.getElementById('regiongov-subtitle').textContent =
+      which === 'region'
+        ? 'Avg compliance % and total incentive EGP by region'
+        : 'Avg compliance % and total incentive EGP by governorate';
+    // Canvas was hidden (display:none) so Chart.js may have sized it at 0 — resize on reveal.
+    if (which === 'region' && charts['c-region']) charts['c-region'].resize();
+    if (which === 'gov'    && charts['c-gov'])    charts['c-gov'].resize();
+  });
+});
 
 /* ═══════════════════════════════════════════════
    EVENT LISTENERS
@@ -1332,8 +1408,11 @@ function getMapFilters() {
 }
 
 function applyMapFilters(data) {
+  // Main filter bar (Round/Type/Region/Governorate) applies first, then the
+  // map's own controls (Round/Type/Compliance) further narrow within that.
+  const base = applyFilters(data);
   const f = getMapFilters();
-  return data.filter(r => {
+  return base.filter(r => {
     if (!r.lat || !r.lon) return false;
     if (f.round !== 'all' && String(r.round) !== f.round) return false;
     if (f.type  !== 'all' && r.outlet_type   !== f.type)  return false;
