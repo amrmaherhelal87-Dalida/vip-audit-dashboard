@@ -460,6 +460,12 @@
         <option value="Upper Egypt">Upper Egypt</option>
       </select>
     </div>
+    <div class="filter-group">
+      <label for="f-gov">Governorate</label>
+      <select id="f-gov">
+        <option value="all">All Governorates</option>
+      </select>
+    </div>
     <button id="btn-reset">↺ Reset</button>
   </div>
 
@@ -524,6 +530,16 @@
         </div>
       </div>
       <div class="chart-wrap"><canvas id="c-region"></canvas></div>
+    </div>
+    <!-- Governorate -->
+    <div class="chart-card chart-wide fade-in" style="animation-delay:.18s">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Governorate Performance</div>
+          <div class="chart-subtitle">Avg compliance % and total incentive EGP by governorate</div>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="c-gov"></canvas></div>
     </div>
   </div>
 
@@ -715,6 +731,48 @@ let ALL_DATA = [];
 let charts = {};
 
 /* ═══════════════════════════════════════════════
+   GOVERNORATE CLEANING
+   Source data has case/typo variants in `governorate`
+   (e.g. "upper egypt", "ismailia", 0/blank for ~150 rows).
+   We normalize casing/typos and, only when governorate is
+   genuinely blank (0/null/empty), fall back to the `region`
+   field to fill it in. `region` itself is left untouched and
+   is not used as a comparison dimension.
+═══════════════════════════════════════════════ */
+const GOV_ALIASES = {
+  'delta':'Delta', 'cairo':'Cairo', 'alexandria':'Alexandria', 'giza':'Giza',
+  'canal':'Canal', 'sinai':'Sinai', 'red sea':'Red Sea', 'redsea':'Red Sea',
+  'upper egypt':'Upper Egypt', 'ue':'Upper Egypt', 'ismailia':'Ismailia',
+};
+const REGION_TO_GOV_FALLBACK = {
+  'delta':'Delta', 'canal':'Canal', 'red sea':'Red Sea', 'redsea':'Red Sea',
+  'sinai':'Sinai', 'south sinai':'Sinai', 'cairo':'Cairo', 'alex':'Alexandria',
+  'alexandria':'Alexandria', 'giza':'Giza', 'hurghada':'Red Sea', 'ue':'Upper Egypt',
+  'ismailia':'Ismailia', 'port said':'Canal',
+};
+function isBlankGov(v) {
+  return v === 0 || v === '0' || v === null || v === undefined || String(v).trim() === '';
+}
+function cleanGovernorate(r) {
+  const raw = r.governorate;
+  if (isBlankGov(raw)) {
+    const regKey = String(r.region || '').trim().toLowerCase();
+    return REGION_TO_GOV_FALLBACK[regKey] || null;
+  }
+  const key = String(raw).trim().toLowerCase();
+  return GOV_ALIASES[key] || String(raw).trim();
+}
+function populateGovFilter() {
+  const present = [...new Set(ALL_DATA.map(r => r.governorate).filter(Boolean))].sort();
+  const sel = document.getElementById('f-gov');
+  present.forEach(g => {
+    const opt = document.createElement('option');
+    opt.value = g; opt.textContent = g;
+    sel.appendChild(opt);
+  });
+}
+
+/* ═══════════════════════════════════════════════
    FILTERS
 ═══════════════════════════════════════════════ */
 function getFilters() {
@@ -722,6 +780,7 @@ function getFilters() {
     round:  document.getElementById('f-round').value,
     type:   document.getElementById('f-type').value,
     region: document.getElementById('f-region').value,
+    gov:    document.getElementById('f-gov').value,
   };
 }
 function applyFilters(data) {
@@ -730,6 +789,7 @@ function applyFilters(data) {
     if (f.round  !== 'all' && String(r.round)       !== f.round)  return false;
     if (f.type   !== 'all' && r.outlet_type          !== f.type)   return false;
     if (f.region !== 'all' && r.region               !== f.region) return false;
+    if (f.gov    !== 'all' && r.governorate          !== f.gov)    return false;
     return true;
   });
 }
@@ -862,7 +922,11 @@ function buildOutletChart(data) {
 
 function buildRegionChart(data) {
   destroyChart('c-region');
-  const regions = ['Delta','Cairo','Alexandria','Giza','Canal','Sinai','Red Sea'];
+  // Derived from data present (not a fixed list) so no region is ever silently dropped.
+  const REGION_ORDER = ['Delta','Cairo','Alexandria','Giza','Canal','Sinai','Red Sea','Upper Egypt'];
+  const present = new Set(data.map(r => r.region).filter(Boolean));
+  const regions = REGION_ORDER.filter(r => present.has(r))
+    .concat([...present].filter(r => !REGION_ORDER.includes(r)).sort());
   const avgs = regions.map(reg => {
     const sub = data.filter(r=>r.region===reg);
     return sub.length ? +(avgScore(sub)*100).toFixed(1) : 0;
@@ -870,7 +934,8 @@ function buildRegionChart(data) {
   const totals = regions.map(reg =>
     data.filter(r=>r.region===reg).reduce((s,r)=>s+(typeof r.total_incentive==='number'?r.total_incentive:0),0)
   );
-  const colors = [RED,BLUE,GOLD,GREEN,PURPLE,ORANGE,TEAL];
+  const colors = [RED,BLUE,GOLD,GREEN,PURPLE,ORANGE,TEAL,PINK];
+  const barColors = regions.map((_,i) => colors[i % colors.length]);
   charts['c-region'] = new Chart(ctx('c-region'), {
     type: 'bar',
     data: {
@@ -878,8 +943,8 @@ function buildRegionChart(data) {
       datasets:[{
         label: 'Avg Compliance %',
         data: avgs,
-        backgroundColor: colors.map(c=>c+'88'),
-        borderColor: colors,
+        backgroundColor: barColors.map(c=>c+'88'),
+        borderColor: barColors,
         borderWidth: 2, borderRadius: 8,
         yAxisID: 'y',
       },{
@@ -899,6 +964,65 @@ function buildRegionChart(data) {
       plugins: {
         legend:{display:true,labels:{color:'#94a3b8',boxWidth:12,font:{size:11}}},
         tooltip:{mode:'index',intersect:false}
+      },
+      scales: {
+        x:{grid:{color:'rgba(255,255,255,0.05)'}},
+        y:{min:0,max:100,grid:{color:'rgba(255,255,255,0.05)'},ticks:{callback:v=>v+'%'}},
+        y2:{position:'right',grid:{display:false},ticks:{color:GOLD,callback:v=>v.toLocaleString()}}
+      }
+    }
+  });
+}
+
+function buildGovernorateChart(data) {
+  destroyChart('c-gov');
+  const GOV_ORDER = ['Delta','Cairo','Alexandria','Giza','Canal','Sinai','Red Sea','Upper Egypt','Ismailia'];
+  const present = new Set(data.map(r => r.governorate).filter(Boolean));
+  const govs = GOV_ORDER.filter(g => present.has(g))
+    .concat([...present].filter(g => !GOV_ORDER.includes(g)).sort());
+  const avgs = govs.map(g => {
+    const sub = data.filter(r=>r.governorate===g);
+    return sub.length ? +(avgScore(sub)*100).toFixed(1) : 0;
+  });
+  const totals = govs.map(g =>
+    data.filter(r=>r.governorate===g).reduce((s,r)=>s+(typeof r.total_incentive==='number'?r.total_incentive:0),0)
+  );
+  const counts = govs.map(g => data.filter(r=>r.governorate===g).length);
+  const colors = [RED,BLUE,GOLD,GREEN,PURPLE,ORANGE,TEAL,PINK,'#64748b'];
+  const barColors = govs.map((_,i) => colors[i % colors.length]);
+  charts['c-gov'] = new Chart(ctx('c-gov'), {
+    type: 'bar',
+    data: {
+      labels: govs,
+      datasets:[{
+        label: 'Avg Compliance %',
+        data: avgs,
+        backgroundColor: barColors.map(c=>c+'88'),
+        borderColor: barColors,
+        borderWidth: 2, borderRadius: 8,
+        yAxisID: 'y',
+      },{
+        label: 'Total Incentive (EGP)',
+        data: totals,
+        type: 'line',
+        borderColor: GOLD,
+        backgroundColor: 'rgba(245,197,24,0.1)',
+        fill: true, tension: 0.4,
+        pointRadius: 5, pointBackgroundColor: GOLD,
+        borderWidth: 2,
+        yAxisID: 'y2',
+      }]
+    },
+    options: {
+      ...CHART_OPT,
+      plugins: {
+        legend:{display:true,labels:{color:'#94a3b8',boxWidth:12,font:{size:11}}},
+        tooltip:{
+          mode:'index', intersect:false,
+          callbacks: {
+            afterBody: items => `Outlets: ${counts[items[0].dataIndex].toLocaleString()}`
+          }
+        }
       },
       scales: {
         x:{grid:{color:'rgba(255,255,255,0.05)'}},
@@ -1075,6 +1199,7 @@ function render() {
   buildTrend(data);
   buildOutletChart(data);
   buildRegionChart(data);
+  buildGovernorateChart(data);
   buildAvailChart(data);
   buildIncentiveChart(data);
   buildSOSChart(data);
@@ -1085,11 +1210,11 @@ function render() {
 /* ═══════════════════════════════════════════════
    EVENT LISTENERS
 ═══════════════════════════════════════════════ */
-['f-round','f-type','f-region'].forEach(id =>
+['f-round','f-type','f-region','f-gov'].forEach(id =>
   document.getElementById(id).addEventListener('change', render)
 );
 document.getElementById('btn-reset').addEventListener('click', () => {
-  ['f-round','f-type','f-region'].forEach(id => document.getElementById(id).value = 'all');
+  ['f-round','f-type','f-region','f-gov'].forEach(id => document.getElementById(id).value = 'all');
   render();
 });
 
@@ -1100,6 +1225,8 @@ async function init() {
   try {
     const resp = await fetch('data/vip_data.json');
     ALL_DATA = await resp.json();
+    ALL_DATA.forEach(r => { r.governorate = cleanGovernorate(r); });
+    populateGovFilter();
     document.getElementById('last-updated').textContent =
       'Updated: ' + new Date().toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'});
     document.getElementById('footer-date').textContent = new Date().getFullYear();

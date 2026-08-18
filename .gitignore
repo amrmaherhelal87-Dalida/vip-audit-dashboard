@@ -11,12 +11,21 @@ serve.js
 # Raw data source
 *.xlsx
 
-# Old project files
+# Old project / inspection files
 styles.css
 app.js
 js/
 image.png
 full_headers.txt
 q2_inspection.txt
+excel_inspection.txt
+full_inspection.txt
+inspect_all_sheets.py
+inspect_excel.py
+inspect_q2_sheet.py
 __pycache__/
 *.pyc
+
+# Wrangler cache
+.wrangler/
+wrangler/
