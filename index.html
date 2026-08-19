@@ -228,6 +228,18 @@
     .chart-tab-panel { display: none; }
     .chart-tab-panel.active { display: block; }
 
+    .kpi-stat-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 18px 20px;
+    }
+    .kpi-stat-title { font-size: 12.5px; font-weight: 600; color: var(--text); margin-bottom: 10px; line-height: 1.3; }
+    .kpi-stat-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+    .kpi-stat-value { font-size: 26px; font-weight: 700; }
+    .kpi-stat-label { font-size: 11px; color: var(--muted); }
+    .kpi-stat-bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.08); overflow: hidden; margin-top: 8px; }
+    .kpi-stat-bar-fill { height: 100%; border-radius: 3px; }
+    .kpi-stat-na { color: var(--muted); font-size: 12px; font-style: italic; }
+
     /* ── TABLE ── */
     .table-card {
       background: var(--surface);
@@ -408,13 +420,12 @@
       <div class="logo-divider"></div>
       <div>
         <h1>VIP Audit Dashboard</h1>
-        <span>Red Bull Egypt — Q2 2026 Field Compliance</span>
+        <span>Red Bull Egypt Field Compliance</span>
       </div>
     </div>
     <div class="header-meta">
       <span class="badge badge-red">LIVE DATA</span>
-      <span class="badge badge-gold">Q2 2026</span>
-      <span id="last-updated">—</span>
+            <span id="last-updated">—</span>
       <div class="logo-divider"></div>
       <img src="assets/adhoc-logo.png" alt="ADHOC" class="adhoc-logo-img" />
     </div>
@@ -425,6 +436,9 @@
 <nav class="tab-nav" id="tab-nav">
   <button class="tab-btn active" data-tab="overview" id="btn-tab-overview">
     <span class="tab-icon">📊</span> Overview
+  </button>
+  <button class="tab-btn" data-tab="quarter" id="btn-tab-quarter">
+    <span class="tab-icon">📅</span> Quarterly
   </button>
   <button class="tab-btn" data-tab="map" id="btn-tab-map">
     <span class="tab-icon">🗺</span> Interactive Map
@@ -471,7 +485,7 @@
         <option value="Upper Egypt">Upper Egypt</option>
       </select>
     </div>
-    <div class="filter-group">
+    <div class="filter-group" style="display:none">
       <label for="f-gov">Governorate</label>
       <select id="f-gov">
         <option value="all">All Governorates</option>
@@ -487,7 +501,7 @@
       <div class="kpi-icon">📋</div>
       <div class="kpi-label">Total Audits</div>
       <div class="kpi-value" id="k-total">—</div>
-      <div class="kpi-sub">Across 4 rounds · April–July</div>
+      <div class="kpi-sub" id="k-rounds-sub">Across all rounds</div>
     </div>
     <div class="kpi-card gold fade-in" style="animation-delay:.08s">
       <div class="kpi-icon">🎯</div>
@@ -541,7 +555,6 @@
         </div>
         <div class="chart-tabs">
           <button class="chart-tab-btn active" data-regiongov-tab="region">Region</button>
-          <button class="chart-tab-btn" data-regiongov-tab="gov">Governorate</button>
         </div>
       </div>
       <div class="chart-tab-panel active" id="regiongov-panel-region">
@@ -555,48 +568,7 @@
 
   <!-- Charts Row 2 -->
   <div class="section-label">KPI Deep Dive</div>
-  <div class="charts-grid">
-    <!-- Availability per round -->
-    <div class="chart-card fade-in">
-      <div class="chart-header">
-        <div>
-          <div class="chart-title">Availability Compliance per Round</div>
-          <div class="chart-subtitle">Compliant vs non-compliant outlets</div>
-        </div>
-      </div>
-      <div class="chart-wrap"><canvas id="c-avail"></canvas></div>
-    </div>
-    <!-- Incentive distribution -->
-    <div class="chart-card fade-in" style="animation-delay:.1s">
-      <div class="chart-header">
-        <div>
-          <div class="chart-title">Incentive EGP Distribution</div>
-          <div class="chart-subtitle">Total incentive by outlet type</div>
-        </div>
-      </div>
-      <div class="chart-wrap"><canvas id="c-incentive"></canvas></div>
-    </div>
-    <!-- SOS -->
-    <div class="chart-card fade-in" style="animation-delay:.15s">
-      <div class="chart-header">
-        <div>
-          <div class="chart-title">Share of Shelf Compliance</div>
-          <div class="chart-subtitle">Compliant vs non-compliant by outlet type</div>
-        </div>
-      </div>
-      <div class="chart-wrap-sm"><canvas id="c-sos"></canvas></div>
-    </div>
-    <!-- Strike zone -->
-    <div class="chart-card fade-in" style="animation-delay:.2s">
-      <div class="chart-header">
-        <div>
-          <div class="chart-title">Strike Zone Compliance</div>
-          <div class="chart-subtitle">By outlet type</div>
-        </div>
-      </div>
-      <div class="chart-wrap-sm"><canvas id="c-sz"></canvas></div>
-    </div>
-  </div>
+  <div class="charts-grid" id="kpi-cards-container"></div>
 
   <!-- Data Table -->
   <div class="section-label">Outlet Detail</div>
@@ -605,6 +577,15 @@
       <div>
         <div class="chart-title">Audit Records</div>
         <div class="chart-subtitle" id="table-count">Showing — records</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input type="text" id="outlet-search"
+          placeholder="🔍  Search by code or name…"
+          style="padding:7px 14px;border-radius:8px;border:1px solid var(--border);
+                 background:var(--surface);color:var(--text);font-size:13px;width:260px;outline:none">
+        <button id="outlet-search-clear" title="Clear search"
+          style="padding:6px 10px;border-radius:8px;border:1px solid var(--border);
+                 background:var(--surface);color:var(--muted);cursor:pointer;font-size:13px">✕</button>
       </div>
     </div>
     <div class="table-scroll">
@@ -631,6 +612,54 @@
   </div>
 
 </div><!-- /tab-overview -->
+
+
+<!-- QUARTER TAB -->
+<div class="tab-panel" id="tab-quarter">
+  <div style="max-width:1600px;margin:0 auto;padding:20px 24px 40px">
+    <div class="section-label">Quarterly Performance</div>
+    <div class="kpi-grid" id="quarter-kpi-row"></div>
+
+    <div class="section-label" style="margin-top:24px">Round vs Quarter Breakdown</div>
+    <div class="charts-grid">
+      <div class="chart-card chart-wide fade-in">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Compliance % by Round</div>
+            <div class="chart-subtitle">Grouped by quarter</div>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="c-quarter-score"></canvas></div>
+      </div>
+      <div class="chart-card chart-wide fade-in" style="animation-delay:.08s">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Incentive EGP by Round</div>
+            <div class="chart-subtitle">Grouped by quarter</div>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="c-quarter-incentive"></canvas></div>
+      </div>
+    </div>
+
+    <div class="section-label" style="margin-top:24px">Quarter Summary Table</div>
+    <div class="table-card fade-in">
+      <div class="table-scroll">
+        <table id="quarter-table">
+          <thead><tr>
+            <th>Quarter</th>
+            <th>Rounds</th>
+            <th>Audits</th>
+            <th>Avg Score</th>
+            <th>Avail. Compliant</th>
+            <th>Total Incentive</th>
+          </tr></thead>
+          <tbody id="quarter-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- MAP TAB -->
 <div class="tab-panel" id="tab-map">
@@ -705,9 +734,8 @@
 </main>
 
 <footer>
-  <p>VIP Audit Dashboard · Data source: <strong>Q2-2026 NewContract</strong> sheet · Red Bull Egypt Field Operations · 
-  Generated <span id="footer-date">2026</span> · 
-  <a href="https://github.com/amrmaherhelal87-Dalida/vip-audit-dashboard" target="_blank">GitHub ↗</a></p>
+  <p>VIP Audit Dashboard · Red Bull Egypt Field Operations ·
+  <a href="https://github.com/amrmaherhelal87-Dalida/vip-audit-dashboard" target="_blank">GitHub 🐙</a></p>
 </footer>
 
 <script>
@@ -772,6 +800,24 @@ function cleanGovernorate(r) {
   const key = String(raw).trim().toLowerCase();
   return GOV_ALIASES[key] || String(raw).trim();
 }
+// Outlet Type casing is inconsistent in source data (e.g. "bazar" never
+// appears capitalized, "Gas Station" has "Gas station"/"gas station"
+// variants) — normalize to the canonical values used by every filter,
+// chart, and KPI card so exact-match filtering (r.outlet_type==='Bazar')
+// never silently drops rows due to a case mismatch.
+const OUTLET_TYPE_ALIASES = {
+  'impulse & grocery':'Impulse & Grocery', 'impulse&grocery':'Impulse & Grocery',
+  'impulse and grocery':'Impulse & Grocery',
+  'supermarket':'Supermarket',
+  'gas station':'Gas Station',
+  'bazar':'Bazar', 'bazaar':'Bazar',
+};
+function cleanOutletType(r) {
+  const raw = r.outlet_type;
+  if (raw === null || raw === undefined || String(raw).trim() === '') return raw;
+  const key = String(raw).trim().toLowerCase();
+  return OUTLET_TYPE_ALIASES[key] || String(raw).trim();
+}
 function populateGovFilter() {
   const present = [...new Set(ALL_DATA.map(r => r.governorate).filter(Boolean))].sort();
   const sel = document.getElementById('f-gov');
@@ -780,6 +826,97 @@ function populateGovFilter() {
     opt.value = g; opt.textContent = g;
     sel.appendChild(opt);
   });
+}
+
+/* ═══════════════════════════════════════════════
+   MERGE KPI EXTRAS
+   data/vip_data.json doesn't (yet) contain the detailed
+   outlet-type-specific KPI fields (Sticky Shelf, Ambient
+   Placement, Cooler Cashier, etc). Rather than editing
+   vip_data.json, we fetch a separate supplementary file
+   and join it in by outlet_code + round (a verified unique
+   key), leaving vip_data.json itself untouched. If the file
+   isn't present, the dashboard degrades gracefully — those
+   KPI cards will show "field not found" instead of crashing.
+═══════════════════════════════════════════════ */
+async function mergeKPIExtras() {
+  try {
+    const resp = await fetch('data/vip_data_kpi_extra.json');
+    if (!resp.ok) return;
+    const extras = await resp.json();
+    const lookup = new Map();
+    extras.forEach(e => lookup.set(`${e.outlet_code}_${e.round}`, e));
+    ALL_DATA.forEach(r => {
+      const match = lookup.get(`${r.outlet_code}_${r.round}`);
+      if (match) Object.assign(r, match);
+    });
+  } catch (e) {
+    console.warn('vip_data_kpi_extra.json not loaded — extra KPI fields unavailable:', e.message);
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   KPI FIELD AUTO-RESOLUTION
+   Some outlet-type-specific KPIs (Sticky Shelf, Ambient
+   Placement, Cooler Cashier, etc.) aren't hardcoded to a
+   guessed JSON key name. Instead we scan the real data's
+   own field names for a match, so we never silently render
+   fake/zero numbers for a field that doesn't actually exist
+   under that name. Unmatched fields are reported, not faked.
+═══════════════════════════════════════════════ */
+let RESOLVED_FIELDS = {};
+let ALL_DATA_KEYS = null;
+function normKey(s) { return String(s).toLowerCase().replace(/[^a-z0-9]/g, ''); }
+function getAllDataKeys() {
+  // Different outlet types populate different columns (sparse data), so we must
+  // union keys across ALL records, not just the first — otherwise fields that
+  // only appear on e.g. Gas Station rows would look "missing" entirely.
+  if (ALL_DATA_KEYS) return ALL_DATA_KEYS;
+  const keySet = new Set();
+  ALL_DATA.forEach(r => Object.keys(r).forEach(k => keySet.add(k)));
+  ALL_DATA_KEYS = [...keySet].map(k => ({ raw:k, norm:normKey(k) }));
+  return ALL_DATA_KEYS;
+}
+function resolveField(candidateTokenSets) {
+  if (!ALL_DATA.length) return null;
+  const normKeys = getAllDataKeys();
+  for (const tokens of candidateTokenSets) {
+    const match = normKeys.find(nk => tokens.every(t => nk.norm.includes(t)));
+    if (match) return match.raw;
+  }
+  return null;
+}
+// KPI catalog: label + candidate token sets (tried in order) for compliance & incentive fields.
+const KPI_CATALOG = {
+  large_cooler:   { label:'Red Bull Large Cooler In-Store', compliance:[['largecoolercompliance'],['large','cooler','compliance'],['largecooler'],['large','cooler']], incentive:[['largecoolerincentive'],['large','cooler','incentive']] },
+  ambient:        { label:'Additional Ambient Placement',   compliance:[['ambientcompliance'],['ambient','compliance'],['ambient']], incentive:[['ambientincentive'],['ambient','incentive']] },
+  pricing:        { label:'Pricing on Main Placement',      compliance:[['pricingcompliance'],['price','compliance'],['pricecommunication'],['price']], incentive:[['pricingincentive'],['price','incentive']] },
+  cooler_cashier: { label:'Red Bull Cooler at Cashier Area',compliance:[['coolercashiercompliance'],['cooler','cashier','compliance'],['coolercashier']], incentive:[['coolercashierincentive'],['cooler','cashier','incentive']] },
+  sticky_shelf:   { label:'Sticky Shelf 1&2 Availability',  compliance:[['stickyshelfcompliance'],['sticky','compliance'],['sticky','shelf'],['sticky']], incentive:[['stickyshelfincentive'],['sticky','incentive']] },
+  chilled_cashier:{ label:'Chilled Availability Within 2m of Cashier', compliance:[['chilledcashiercompliance'],['cashier','placement','compliance'],['chilled','cashier'],['cashierplacement']], incentive:[['chilledcashierincentive'],['cashier','placement','incentive']] },
+  brand_vis:      { label:'Brand Visibility/Messaging',     compliance:[['brandviscompliance'],['brand','visibility'],['brand','messaging'],['posm','compliance']], incentive:[['brandvisincentive'],['posm','incentive']] },
+  cooler_visible: { label:'Red Bull Cooler Accessible & Visible', compliance:[['coolervisiblecompliance'],['cooler','research','compliance'],['cooler','visible'],['cooler','accessible']], incentive:[['coolervisibleincentive'],['cooler','research','incentive'],['cooler','visible','incentive']] },
+  outdoor_sign:   { label:'Outdoor Red Bull Shop Sign / Illuminated Can Sign', compliance:[['outdoorcompliance'],['outdoor','compliance'],['outdoor','visibility'],['outdoor']], incentive:[['outdoorincentive'],['outdoor','incentive']] },
+};
+function resolveKPICatalog() {
+  Object.entries(KPI_CATALOG).forEach(([id, cfg]) => {
+    RESOLVED_FIELDS[id] = {
+      compliance: resolveField(cfg.compliance),
+      incentive:  resolveField(cfg.incentive),
+      label: cfg.label,
+    };
+  });
+}
+function reportUnresolvedKPIFields() {
+  const missing = Object.values(RESOLVED_FIELDS).filter(f => !f.compliance);
+  if (!missing.length) return;
+  console.warn('KPI fields not found in data/vip_data.json:', missing.map(m=>m.label));
+  const banner = document.createElement('div');
+  banner.style.cssText = 'background:#3a1a1a;border:1px solid #e8001c;color:#fca5a5;font-size:12px;padding:10px 16px;border-radius:8px;margin-bottom:16px;';
+  banner.innerHTML = `⚠ ${missing.length} KPI field(s) not found in data — showing as "No data": ` +
+    missing.map(m=>m.label).join(', ');
+  const anchor = document.querySelector('.section-label');
+  if (anchor) anchor.parentElement.insertBefore(banner, anchor);
 }
 
 /* ═══════════════════════════════════════════════
@@ -1082,108 +1219,6 @@ function buildAvailChart(data) {
   });
 }
 
-function buildIncentiveChart(data) {
-  destroyChart('c-incentive');
-  const types = ['Impulse & Grocery','Supermarket','Gas Station','Bazar'];
-  const totals = types.map(t=>
-    data.filter(r=>r.outlet_type===t).reduce((s,r)=>s+(typeof r.total_incentive==='number'?r.total_incentive:0),0)
-  );
-  charts['c-incentive'] = new Chart(ctx('c-incentive'), {
-    type: 'doughnut',
-    data:{
-      labels:types,
-      datasets:[{
-        data:totals,
-        backgroundColor:['rgba(232,0,28,.7)','rgba(245,197,24,.7)','rgba(59,130,246,.7)','rgba(139,92,246,.7)'],
-        borderColor:['#e8001c','#f5c518','#3b82f6','#8b5cf6'],
-        borderWidth:2, hoverOffset:12,
-      }]
-    },
-    options:{
-      ...CHART_OPT,
-      cutout:'65%',
-      plugins:{
-        legend:{display:true,position:'right',labels:{color:'#94a3b8',boxWidth:12,font:{size:11},padding:10}},
-        tooltip:{callbacks:{label:c=>{
-          const total = c.dataset.data.reduce((a,b)=>a+b,0);
-          const pct = total ? (c.parsed/total*100).toFixed(1) : 0;
-          return `${c.label}: ${c.parsed.toLocaleString()} EGP (${pct}%)`;
-        }}}
-      }
-    }
-  });
-}
-
-function buildSOSChart(data) {
-  destroyChart('c-sos');
-  const types = ['Impulse & Grocery','Supermarket','Gas Station','Bazar'];
-  const comp    = types.map(t => data.filter(r=>r.outlet_type===t&&r.sos_compliance===1).length);
-  const nonComp = types.map(t => data.filter(r=>r.outlet_type===t&&r.sos_compliance===0).length);
-  const typeTotals = types.map((t,i) => comp[i]+nonComp[i]);
-  const pctLabel = (value, idx) => {
-    const total = typeTotals[idx];
-    const pct = total ? Math.round(value/total*100) : 0;
-    return `${value.toLocaleString()} (${pct}%)`;
-  };
-  charts['c-sos'] = new Chart(ctx('c-sos'), {
-    type: 'bar',
-    data:{
-      labels:types.map(t=>t.split('&')[0].trim()),
-      datasets:[
-        {label:'Compliant',data:comp,backgroundColor:GREEN+'99',borderColor:GREEN,borderWidth:2,borderRadius:5,stack:'s'},
-        {label:'Non-Compliant',data:nonComp,backgroundColor:RED+'99',borderColor:RED,borderWidth:2,borderRadius:5,stack:'s'},
-      ]
-    },
-    options:{
-      ...CHART_OPT,
-      plugins:{
-        legend:{display:true,labels:{color:'#94a3b8',boxWidth:10,font:{size:10}}},
-        tooltip:{
-          callbacks:{
-            label: c => `${c.dataset.label}: ${pctLabel(c.parsed.y, c.dataIndex)}`
-          }
-        }
-      },
-      scales:{x:{grid:{display:false},stacked:true},y:{grid:{color:'rgba(255,255,255,0.05)'},stacked:true}}
-    }
-  });
-}
-
-function buildSZChart(data) {
-  destroyChart('c-sz');
-  const types = ['Impulse & Grocery','Supermarket','Gas Station'];
-  const comp    = types.map(t => data.filter(r=>r.outlet_type===t&&r.sz_compliance===1).length);
-  const nonComp = types.map(t => data.filter(r=>r.outlet_type===t&&r.sz_compliance===0).length);
-  const typeTotals = types.map((t,i) => comp[i]+nonComp[i]);
-  const pctLabel = (value, idx) => {
-    const total = typeTotals[idx];
-    const pct = total ? Math.round(value/total*100) : 0;
-    return `${value.toLocaleString()} (${pct}%)`;
-  };
-  charts['c-sz'] = new Chart(ctx('c-sz'), {
-    type:'bar',
-    data:{
-      labels:types.map(t=>t.split('&')[0].trim()),
-      datasets:[
-        {label:'Compliant',data:comp,backgroundColor:BLUE+'99',borderColor:BLUE,borderWidth:2,borderRadius:5,stack:'s'},
-        {label:'Non-Compliant',data:nonComp,backgroundColor:ORANGE+'99',borderColor:ORANGE,borderWidth:2,borderRadius:5,stack:'s'},
-      ]
-    },
-    options:{
-      ...CHART_OPT,
-      plugins:{
-        legend:{display:true,labels:{color:'#94a3b8',boxWidth:10,font:{size:10}}},
-        tooltip:{
-          callbacks:{
-            label: c => `${c.dataset.label}: ${pctLabel(c.parsed.y, c.dataIndex)}`
-          }
-        }
-      },
-      scales:{x:{grid:{display:false},stacked:true},y:{grid:{color:'rgba(255,255,255,0.05)'},stacked:true}}
-    }
-  });
-}
-
 /* ═══════════════════════════════════════════════
    TABLE
 ═══════════════════════════════════════════════ */
@@ -1207,8 +1242,15 @@ function scoreFill(v) {
 
 function renderTable(data) {
   const tbody = document.getElementById('table-body');
-  const show = data.slice(0, 200);
-  document.getElementById('table-count').textContent = `Showing ${show.length.toLocaleString()} of ${data.length.toLocaleString()} records`;
+  // Apply outlet search filter
+  const searchQ = (document.getElementById('outlet-search')?.value || '').toLowerCase().trim();
+  let filtered = searchQ
+    ? data.filter(r =>
+        String(r.outlet_code||'').toLowerCase().includes(searchQ) ||
+        String(r.outlet_name||'').toLowerCase().includes(searchQ))
+    : data;
+  const show = filtered.slice(0, 200);
+  document.getElementById('table-count').textContent = `Showing ${show.length.toLocaleString()} of ${filtered.length.toLocaleString()} records${searchQ ? ' (filtered)' : ''}`;
   tbody.innerHTML = show.map(r => `<tr>
     <td style="color:var(--muted)">${r.serial||'—'}</td>
     <td><span class="badge badge-gold" style="font-size:10px">R${r.round||'—'}</span></td>
@@ -1253,17 +1295,162 @@ function render() {
   buildOutletChart(data);
   buildRegionChart(data);
   buildGovernorateChart(data);
-  buildAvailChart(data);
-  buildIncentiveChart(data);
-  buildSOSChart(data);
-  buildSZChart(data);
+  renderAllKPICards();
   renderTable(data);
   if (mapInitialised) updateMap();
 }
 
 /* ═══════════════════════════════════════════════
-   REGION / GOVERNORATE CHART TABS
+   KPI DEEP DIVE — one combo chart (bar % + line EGP)
+   per KPI, each with its own outlet-type tabs
 ═══════════════════════════════════════════════ */
+const ROUNDS_MONTHS = [[79,'April'],[80,'May'],[81,'June'],[82,'July']];
+
+// Which KPI cards to render, and which outlet type(s) each applies to.
+// Fixed fields (avail/sos/sz) are known-good; others resolve via KPI_CATALOG.
+const KPI_CARDS = [
+  { id:'availability', title:'Availability Compliance per Round',
+    complianceField:'avail_compliance',
+    incentiveResolver: () => resolveField([['avail','incentive'],['availability','incentive']]),
+    types:['Impulse & Grocery','Supermarket','Gas Station','Bazar'], color:RED },
+  { id:'sos', title:'Share of Shelf Compliance',
+    complianceField:'sos_compliance',
+    incentiveResolver: () => resolveField([['sos','incentive'],['shelf','incentive']]),
+    types:['Impulse & Grocery','Supermarket','Gas Station'], color:GREEN },
+  { id:'sz', title:'Strike Zone Compliance',
+    complianceField:'sz_compliance',
+    incentiveResolver: () => resolveField([['sz','incentive'],['strike','incentive']]),
+    types:['Impulse & Grocery','Supermarket','Gas Station'], color:BLUE },
+  { id:'pricing', title:'Pricing on Main Placement', catalogId:'pricing',
+    types:['Supermarket','Gas Station','Bazar'], color:GOLD },
+  { id:'large_cooler', title:'Red Bull Large Cooler In-Store', catalogId:'large_cooler',
+    types:['Impulse & Grocery'], color:PURPLE },
+  { id:'ambient', title:'Additional Ambient Placement', catalogId:'ambient',
+    types:['Supermarket'], color:ORANGE },
+  { id:'cooler_cashier', title:'Red Bull Cooler at Cashier Area', catalogId:'cooler_cashier',
+    types:['Supermarket'], color:TEAL },
+  { id:'sticky_shelf', title:'Sticky Shelf 1&2 Availability', catalogId:'sticky_shelf',
+    types:['Gas Station'], color:PINK },
+  { id:'chilled_cashier', title:'Chilled Availability Within 2m of Cashier', catalogId:'chilled_cashier',
+    types:['Gas Station'], color:GREEN },
+  { id:'brand_vis', title:'Brand Visibility/Messaging', catalogId:'brand_vis',
+    types:['Gas Station'], color:BLUE },
+  { id:'cooler_visible', title:'Red Bull Cooler Accessible & Visible', catalogId:'cooler_visible',
+    types:['Bazar'], color:RED },
+  { id:'outdoor_sign', title:'Outdoor Red Bull Shop Sign / Illuminated Can Sign', catalogId:'outdoor_sign',
+    types:['Bazar'], color:GOLD },
+];
+const kpiCardActiveType = {};
+
+function createKPICardsDOM() {
+  const container = document.getElementById('kpi-cards-container');
+  container.innerHTML = '';
+  KPI_CARDS.forEach((cfg, idx) => {
+    kpiCardActiveType[cfg.id] = cfg.types[0];
+    const card = document.createElement('div');
+    card.className = 'chart-card fade-in';
+    card.style.animationDelay = (idx * 0.04) + 's';
+    card.id = 'card-kpi-' + cfg.id;
+    const tabsHTML = cfg.types.length > 1
+      ? `<div class="chart-tabs" data-kpi-card="${cfg.id}">` +
+          cfg.types.map((t,i) => `<button class="chart-tab-btn${i===0?' active':''}" data-kpi-card-type="${t}">${t.split('&')[0].trim()}</button>`).join('') +
+        `</div>`
+      : '';
+    card.innerHTML = `
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">${cfg.title}</div>
+          <div class="chart-subtitle" id="subtitle-kpi-${cfg.id}">${cfg.types[0]} · avg compliance % and total incentive EGP by round</div>
+        </div>
+        ${tabsHTML}
+      </div>
+      <div class="chart-wrap" id="wrap-kpi-${cfg.id}"><canvas id="c-kpi-${cfg.id}"></canvas></div>
+      <div class="kpi-stat-na" id="na-kpi-${cfg.id}" style="display:none;padding:20px 0;"></div>
+    `;
+    container.appendChild(card);
+    card.querySelectorAll('[data-kpi-card-type]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        card.querySelectorAll('[data-kpi-card-type]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        kpiCardActiveType[cfg.id] = btn.dataset.kpiCardType;
+        renderKPICard(cfg);
+      });
+    });
+  });
+}
+
+function buildKPICombo(canvasId, data, complianceKey, incentiveKey, colorBar) {
+  destroyChart(canvasId);
+  const rounds = ROUNDS_MONTHS.map(r=>r[0]);
+  const months = ROUNDS_MONTHS.map(r=>r[1]);
+  const avgs = rounds.map(r => {
+    const vals = data.filter(d=>d.round===r).map(d=>d[complianceKey]).filter(v=>v===0||v===1);
+    return vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length*100) : 0;
+  });
+  const counts = rounds.map(r => data.filter(d=>d.round===r && (d[complianceKey]===0||d[complianceKey]===1)).length);
+  const incentives = incentiveKey
+    ? rounds.map(r => data.filter(d=>d.round===r).reduce((s,d)=>s+(typeof d[incentiveKey]==='number'?d[incentiveKey]:0),0))
+    : null;
+  const datasets = [{
+    label:'Avg Compliance %', data:avgs,
+    backgroundColor:colorBar+'88', borderColor:colorBar,
+    borderWidth:2, borderRadius:8, yAxisID:'y',
+  }];
+  if (incentives) {
+    datasets.push({
+      label:'Total Incentive (EGP)', data:incentives, type:'line',
+      borderColor:GOLD, backgroundColor:'rgba(245,197,24,0.1)',
+      fill:true, tension:.4, pointRadius:5, pointBackgroundColor:GOLD,
+      borderWidth:2, yAxisID:'y2',
+    });
+  }
+  charts[canvasId] = new Chart(ctx(canvasId), {
+    type:'bar',
+    data:{ labels:months, datasets },
+    options:{
+      ...CHART_OPT,
+      plugins:{
+        legend:{display:true,labels:{color:'#94a3b8',boxWidth:12,font:{size:11}}},
+        tooltip:{ mode:'index', intersect:false, callbacks:{
+          afterBody: items => `Outlets: ${counts[items[0].dataIndex].toLocaleString()}`
+        }}
+      },
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,0.05)'}},
+        y:{min:0,max:100,grid:{color:'rgba(255,255,255,0.05)'},ticks:{callback:v=>v+'%'}},
+        ...(incentives ? {y2:{position:'right',grid:{display:false},ticks:{color:GOLD,callback:v=>v.toLocaleString()}}} : {})
+      }
+    }
+  });
+}
+
+function renderKPICard(cfg) {
+  const type = kpiCardActiveType[cfg.id];
+  const data = applyFilters(ALL_DATA).filter(r => r.outlet_type === type);
+  document.getElementById('subtitle-kpi-'+cfg.id).textContent =
+    `${type} · avg compliance % and total incentive EGP by round`;
+
+  const complianceKey = cfg.complianceField || (RESOLVED_FIELDS[cfg.catalogId] && RESOLVED_FIELDS[cfg.catalogId].compliance);
+  const incentiveKey  = cfg.incentiveResolver ? cfg.incentiveResolver() : (RESOLVED_FIELDS[cfg.catalogId] && RESOLVED_FIELDS[cfg.catalogId].incentive);
+
+  const wrap = document.getElementById('wrap-kpi-'+cfg.id);
+  const naEl = document.getElementById('na-kpi-'+cfg.id);
+  if (!complianceKey) {
+    destroyChart('c-kpi-'+cfg.id);
+    wrap.style.display = 'none';
+    naEl.style.display = '';
+    naEl.textContent = `⚠ Field not found in data — confirm exact key name for "${cfg.title}"`;
+    return;
+  }
+  wrap.style.display = '';
+  naEl.style.display = 'none';
+  buildKPICombo('c-kpi-'+cfg.id, data, complianceKey, incentiveKey, cfg.color);
+}
+
+function renderAllKPICards() {
+  KPI_CARDS.forEach(renderKPICard);
+}
+
 document.querySelectorAll('[data-regiongov-tab]').forEach(btn => {
   btn.addEventListener('click', () => {
     const which = btn.dataset.regiongovTab;
@@ -1301,8 +1488,12 @@ async function init() {
   try {
     const resp = await fetch('data/vip_data.json');
     ALL_DATA = await resp.json();
-    ALL_DATA.forEach(r => { r.governorate = cleanGovernorate(r); });
+    ALL_DATA.forEach(r => { r.governorate = cleanGovernorate(r); r.outlet_type = cleanOutletType(r); });
+    await mergeKPIExtras();
     populateGovFilter();
+    resolveKPICatalog();
+    reportUnresolvedKPIFields();
+    createKPICardsDOM();
     document.getElementById('last-updated').textContent =
       'Updated: ' + new Date().toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'});
     document.getElementById('footer-date').textContent = new Date().getFullYear();
@@ -1424,8 +1615,9 @@ function applyMapFilters(data) {
 
 function initMap() {
   leafletMap = L.map('leaflet-map', { center:[26.8,30.8], zoom:6, preferCanvas:true });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; OSM &copy; CARTO', subdomains:'abcd', maxZoom:19,
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+    subdomains:'abcd', maxZoom:19,
   }).addTo(leafletMap);
   markerCluster = L.markerClusterGroup({ maxClusterRadius:50, showCoverageOnHover:false });
   leafletMap.addLayer(markerCluster);
@@ -1480,13 +1672,33 @@ function updateMap() {
     const avStr = r.avail_compliance===1 ? '✓ Compliant' : '✗ Non-compliant';
     const avCl  = r.avail_compliance===1 ? '#10b981' : '#e8001c';
 
-    const popup = `<div class="popup-title">${r.outlet_code||'—'}</div>
+    // Helper: KPI compliance row (skip if null/undefined)
+    const kpiRow = (label, val) => {
+      if (val === null || val === undefined) return '';
+      const cl = val === 1 ? '#10b981' : '#e8001c';
+      return `<div class="popup-row"><span>${label}</span><strong style="color:${cl}">${val===1?'✓':'✗'}</strong></div>`;
+    };
+    const popup = `
+      <div class="popup-title">${r.outlet_code||'—'}</div>
+      ${r.outlet_name ? `<div style="color:#94a3b8;font-size:11px;margin:-4px 0 6px;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.outlet_name}">${r.outlet_name}</div>` : ''}
       <div class="popup-score" style="color:${scoreCl}">${scorePct}</div>
       <div class="popup-row"><span>Type</span><strong><span style="color:${typeColor}">●</span> ${r.outlet_type}</strong></div>
       <div class="popup-row"><span>Round</span><strong>R${r.round} — ${r.month}</strong></div>
-      <div class="popup-row"><span>Region</span><strong>${r.region} / ${r.governorate}</strong></div>
-      <div class="popup-row"><span>Availability</span><strong style="color:${avCl}">${avStr}</strong></div>
-      <div class="popup-row"><span>SoS</span><strong style="color:${r.sos_compliance===1?'#10b981':'#e8001c'}">${r.sos_compliance===1?'✓':'✗'}</strong></div>
+      <div class="popup-row"><span>Region</span><strong>${r.region||'—'}</strong></div>
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:5px 0">
+      ${kpiRow('Availability', r.avail_compliance)}
+      ${kpiRow('SoS', r.sos_compliance)}
+      ${kpiRow('Strike Zone', r.sz_compliance)}
+      ${kpiRow('Price', r.price_compliance)}
+      ${kpiRow('POSM', r.posm_compliance)}
+      ${kpiRow('Outdoor Visibility', r.outdoor_compliance)}
+      ${kpiRow('Sticky Shelf', r.sticky_compliance)}
+      ${kpiRow('Ambient Placement', r.ambient_compliance)}
+      ${kpiRow('Cooler @ Cashier', r.cooler_cashier_compliance)}
+      ${kpiRow('Large Cooler', r.large_cooler_compliance)}
+      ${kpiRow('Cooler Accessible', r.cooler_visible_compliance)}
+      ${kpiRow('Chilled 2m Cashier', r.chilled_cashier_compliance)}
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:5px 0">
       <div class="popup-row"><span>Incentive</span><strong style="color:#f5c518">${incentive} EGP</strong></div>`;
 
     batch.push(L.marker([lat,lon],{icon:makeCircle(color,radius)}).bindPopup(popup,{maxWidth:260,closeButton:false}));
@@ -1512,6 +1724,169 @@ document.getElementById('btn-map-reset').addEventListener('click', () => {
   document.getElementById('m-color').value = 'type';
   if (mapInitialised) updateMap();
 });
+
+/* ═══════════════════════════════════════════════════════════
+   OUTLET SEARCH
+═══════════════════════════════════════════════════════════ */
+document.getElementById('outlet-search').addEventListener('input', function() {
+  renderTable(getFilteredData());
+});
+document.getElementById('outlet-search-clear').addEventListener('click', function() {
+  document.getElementById('outlet-search').value = '';
+  renderTable(getFilteredData());
+});
+
+/* ═══════════════════════════════════════════════════════════
+   QUARTER TAB
+═══════════════════════════════════════════════════════════ */
+const MONTH_TO_Q = {
+  'January':'Q1','February':'Q1','March':'Q1',
+  'April':'Q2','May':'Q2','June':'Q2',
+  'July':'Q3','August':'Q3','September':'Q3',
+  'October':'Q4','November':'Q4','December':'Q4'
+};
+
+function buildQuarterTab(data) {
+  // Group data by quarter-year
+  const quarters = {};
+  data.forEach(r => {
+    const q = MONTH_TO_Q[r.month] || 'Unknown';
+    const yr = '2026';
+    const key = `${q} ${yr}`;
+    if (!quarters[key]) quarters[key] = { audits:[], rounds:new Set(), months:new Set() };
+    quarters[key].audits.push(r);
+    if (r.round) quarters[key].rounds.add(r.round);
+    if (r.month) quarters[key].months.add(r.month);
+  });
+
+  const qKeys = Object.keys(quarters).sort();
+
+  // ── KPI summary cards ─────────────────────────────────
+  const kpiRow = document.getElementById('quarter-kpi-row');
+  kpiRow.innerHTML = qKeys.map((q, i) => {
+    const { audits, rounds } = quarters[q];
+    const avgScore = audits.reduce((s,r) => s + (r.overall_score||0), 0) / audits.length;
+    const incentive = audits.reduce((s,r) => s + (r.total_incentive||0), 0);
+    const compliant = audits.filter(r => r.avail_compliance === 1).length;
+    const compPct   = (compliant / audits.length * 100).toFixed(1);
+    const colors = ['red','gold','green','red'];
+    return `<div class="kpi-card ${colors[i%colors.length]} fade-in" style="animation-delay:${i*0.08}s">
+      <div class="kpi-icon">📅</div>
+      <div class="kpi-label">${q}</div>
+      <div class="kpi-value">${audits.length.toLocaleString()}</div>
+      <div class="kpi-sub">Rounds: ${[...rounds].sort().join(', ')}</div>
+      <div class="kpi-sub">Avg Score: ${(avgScore*100).toFixed(1)}%</div>
+      <div class="kpi-sub">Avail: ${compPct}% · ${incentive.toFixed(0)} EGP</div>
+    </div>`;
+  }).join('');
+
+  // ── Round-level score chart ────────────────────────────
+  // Get all rounds sorted
+  const allRounds = [...new Set(data.map(r=>r.round))].sort((a,b)=>a-b);
+  const roundLabels = allRounds.map(r => `R${r}`);
+  const roundColors = allRounds.map(r => {
+    const month = (data.find(d=>d.round===r)||{}).month||'';
+    const q = MONTH_TO_Q[month]||'Unknown';
+    const palette = {'Q1':'#3b82f6','Q2':'#e8001c','Q3':'#f5c518','Q4':'#10b981'};
+    return palette[q] || '#94a3b8';
+  });
+
+  const roundScores = allRounds.map(r => {
+    const sub = data.filter(d=>d.round===r);
+    if (!sub.length) return 0;
+    return (sub.reduce((s,d)=>s+(d.overall_score||0),0)/sub.length*100);
+  });
+  const roundIncentives = allRounds.map(r =>
+    data.filter(d=>d.round===r).reduce((s,d)=>s+(d.total_incentive||0),0)
+  );
+
+  // Score chart
+  const scoreCtx = document.getElementById('c-quarter-score');
+  if (scoreCtx) {
+    if (scoreCtx._qChart) scoreCtx._qChart.destroy();
+    scoreCtx._qChart = new Chart(scoreCtx, {
+      type:'bar',
+      data:{
+        labels: roundLabels,
+        datasets:[{
+          label:'Avg Compliance %',
+          data: roundScores.map(v=>v.toFixed(1)),
+          backgroundColor: roundColors.map(c=>c+'99'),
+          borderColor: roundColors,
+          borderWidth:2, borderRadius:6
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false},
+          tooltip:{callbacks:{label:ctx=>`${ctx.raw}%`}}},
+        scales:{
+          x:{ticks:{color:'#94a3b8'},grid:{color:'rgba(255,255,255,0.05)'}},
+          y:{ticks:{color:'#94a3b8',callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.05)'},
+             suggestedMin:0,suggestedMax:100}
+        }
+      }
+    });
+  }
+
+  // Incentive chart
+  const incCtx = document.getElementById('c-quarter-incentive');
+  if (incCtx) {
+    if (incCtx._qChart) incCtx._qChart.destroy();
+    incCtx._qChart = new Chart(incCtx, {
+      type:'bar',
+      data:{
+        labels: roundLabels,
+        datasets:[{
+          label:'Incentive EGP',
+          data: roundIncentives,
+          backgroundColor: roundColors.map(c=>c+'99'),
+          borderColor: roundColors,
+          borderWidth:2, borderRadius:6
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false},
+          tooltip:{callbacks:{label:ctx=>`${Number(ctx.raw).toLocaleString()} EGP`}}},
+        scales:{
+          x:{ticks:{color:'#94a3b8'},grid:{color:'rgba(255,255,255,0.05)'}},
+          y:{ticks:{color:'#94a3b8',callback:v=>v.toLocaleString()},
+             grid:{color:'rgba(255,255,255,0.05)'}}
+        }
+      }
+    });
+  }
+
+  // ── Summary table ──────────────────────────────────────
+  const tbody = document.getElementById('quarter-tbody');
+  tbody.innerHTML = qKeys.map(q => {
+    const { audits, rounds } = quarters[q];
+    const avgScore = audits.reduce((s,r)=>s+(r.overall_score||0),0)/audits.length;
+    const incentive = audits.reduce((s,r)=>s+(r.total_incentive||0),0);
+    const compliant = audits.filter(r=>r.avail_compliance===1).length;
+    const compPct   = (compliant/audits.length*100).toFixed(1);
+    const scoreCol = avgScore>=0.7?'#10b981':avgScore>=0.5?'#f5c518':'#e8001c';
+    return `<tr>
+      <td><strong>${q}</strong></td>
+      <td style="color:var(--muted)">${[...rounds].sort().map(r=>`R${r}`).join(' · ')}</td>
+      <td>${audits.length.toLocaleString()}</td>
+      <td style="color:${scoreCol};font-weight:600">${(avgScore*100).toFixed(1)}%</td>
+      <td>${compliant.toLocaleString()} <span style="color:var(--muted)">(${compPct}%)</span></td>
+      <td style="color:var(--gold);font-weight:600">${incentive.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',')} EGP</td>
+    </tr>`;
+  }).join('');
+}
+
+// Wire up Quarter tab – build when first visited
+let quarterBuilt = false;
+document.getElementById('btn-tab-quarter')?.addEventListener('click', () => {
+  if (!quarterBuilt) {
+    buildQuarterTab(ALL_DATA);
+    quarterBuilt = true;
+  }
+});
+
 </script>
 </body>
 </html>
