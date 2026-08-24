@@ -1494,9 +1494,10 @@ async function init() {
     resolveKPICatalog();
     reportUnresolvedKPIFields();
     createKPICardsDOM();
-    document.getElementById('last-updated').textContent =
-      'Updated: ' + new Date().toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'});
-    document.getElementById('footer-date').textContent = new Date().getFullYear();
+    const luEl = document.getElementById('last-updated');
+    if (luEl) luEl.textContent = 'Updated: ' + new Date().toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'});
+    const fdEl = document.getElementById('footer-date');
+    if (fdEl) fdEl.textContent = new Date().getFullYear();
     render();
     document.getElementById('loading').style.display = 'none';
     const app = document.getElementById('app');
