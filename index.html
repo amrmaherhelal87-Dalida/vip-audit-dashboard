@@ -1506,9 +1506,9 @@ async function init() {
     app.style.transition = 'opacity .4s ease';
   } catch(e) {
     document.getElementById('loading').innerHTML =
-      '<p style="color:#e8001c">⚠ ' + e.name + ': ' + e.message +
-      '<br><small style="color:#94a3b8">Open browser console (F12) for full trace</small></p>';
-    console.error('DASHBOARD INIT FAILED:', e.name, e.message, e.stack);
+      '<p style="color:#e8001c">⚠ Dashboard failed to load<br>' +
+      '<small style="color:#94a3b8">' + e.name + ': ' + e.message + '</small></p>';
+    console.error('DASHBOARD INIT FAILED:', e);
   }
 }
 
