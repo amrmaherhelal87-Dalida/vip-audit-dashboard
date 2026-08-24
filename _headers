@@ -1,4 +1,15 @@
 /*
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
-  Cache-Control: public, max-age=3600
+
+/
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/*.html
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/data/*.json
+  Cache-Control: public, max-age=1800
+
+/assets/*
+  Cache-Control: public, max-age=86400
