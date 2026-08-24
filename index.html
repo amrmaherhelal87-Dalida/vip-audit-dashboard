@@ -1487,6 +1487,7 @@ document.getElementById('btn-reset').addEventListener('click', () => {
 async function init() {
   try {
     const resp = await fetch('data/vip_data.json');
+    if (!resp.ok) throw new Error('HTTP ' + resp.status + ' loading vip_data.json');
     ALL_DATA = await resp.json();
     ALL_DATA.forEach(r => { r.governorate = cleanGovernorate(r); r.outlet_type = cleanOutletType(r); });
     await mergeKPIExtras();
@@ -1505,8 +1506,9 @@ async function init() {
     app.style.transition = 'opacity .4s ease';
   } catch(e) {
     document.getElementById('loading').innerHTML =
-      '<p style="color:#e8001c">⚠ Could not load data/vip_data.json<br><small style="color:#94a3b8">Serve this page from a web server (not file://)</small></p>';
-    console.error(e);
+      '<p style="color:#e8001c">⚠ ' + e.name + ': ' + e.message +
+      '<br><small style="color:#94a3b8">Open browser console (F12) for full trace</small></p>';
+    console.error('DASHBOARD INIT FAILED:', e.name, e.message, e.stack);
   }
 }
 
