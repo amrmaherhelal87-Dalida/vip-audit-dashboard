@@ -1693,7 +1693,7 @@ document.querySelectorAll('[data-contract-tab]').forEach(btn => {
     document.querySelectorAll('[data-contract-tab]').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     activeContractType = btn.dataset.contractTab;
-    buildKPIContractChart(getFilteredData ? getFilteredData() : ALL_DATA);
+    buildKPIContractChart(applyFilters(ALL_DATA));
   });
 });
 
@@ -1916,11 +1916,11 @@ document.getElementById('btn-map-reset').addEventListener('click', () => {
    OUTLET SEARCH
 ═══════════════════════════════════════════════════════════ */
 document.getElementById('outlet-search').addEventListener('input', function() {
-  renderTable(getFilteredData());
+  renderTable(applyFilters(ALL_DATA));
 });
 document.getElementById('outlet-search-clear').addEventListener('click', function() {
   document.getElementById('outlet-search').value = '';
-  renderTable(getFilteredData());
+  renderTable(applyFilters(ALL_DATA));
 });
 
 /* ═══════════════════════════════════════════════════════════
