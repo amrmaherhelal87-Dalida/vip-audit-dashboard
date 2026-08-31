@@ -118,6 +118,19 @@
       margin-bottom: 28px;
       align-items: center;
     }
+    /* ── Map filter bar: above Leaflet tiles (z ~400) ── */
+    #tab-map .filters-bar {
+      position: sticky;
+      top: 117px;
+      z-index: 1200 !important;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      background: rgba(8,12,24,0.95) !important;
+      border: 1px solid rgba(232,0,28,0.2) !important;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.6), 0 1px 0 rgba(232,0,28,0.1);
+    }
+    /* ms-panel dropdowns in map tab must clear Leaflet z-index */
+    #tab-map .ms-panel { z-index: 5000 !important; }
     /* ── Sticky filter bars: all tabs ── */
     #tab-overview > .filters-bar,
     #tab-map .filters-bar:first-of-type,
