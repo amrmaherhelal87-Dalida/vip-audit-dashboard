@@ -966,14 +966,20 @@
     <!-- Quarter SELECT filter -->
     <div class="filters-bar fade-in" style="margin-bottom:24px;padding:12px 16px">
       <div class="filter-group">
-        <label for="q-select">Quarter</label>
-        <select id="q-select">
-          <option value="all">All Quarters</option>
-          <option value="Q1">Q1</option>
-          <option value="Q2">Q2</option>
-          <option value="Q3">Q3</option>
-          <option value="Q4">Q4</option>
-        </select>
+        <label>Quarter</label>
+        <div class="ms-wrap" id="ms-quarter">
+          <div class="ms-display" onclick="toggleMS('ms-quarter')">
+            <span class="ms-label" id="ms-quarter-lbl">All Quarters</span>
+            <span class="ms-arrow">&#9660;</span>
+          </div>
+          <div class="ms-panel">
+            <label class="ms-opt all-opt"><input type="checkbox" value="all" checked onchange="msAllToggle('ms-quarter',this)"> All Quarters</label>
+            <label class="ms-opt"><input type="checkbox" value="Q1" onchange="msOptChange('ms-quarter')"> Q1</label>
+            <label class="ms-opt"><input type="checkbox" value="Q2" onchange="msOptChange('ms-quarter')"> Q2</label>
+            <label class="ms-opt"><input type="checkbox" value="Q3" onchange="msOptChange('ms-quarter')"> Q3</label>
+            <label class="ms-opt"><input type="checkbox" value="Q4" onchange="msOptChange('ms-quarter')"> Q4</label>
+          </div>
+        </div>
       </div>
       <span id="q-filter-label" style="color:var(--muted);font-size:12px;margin-left:8px;align-self:flex-end;padding-bottom:6px"></span>
     </div>
@@ -1029,24 +1035,36 @@
     <!-- Map filters -->
     <div class="filters-bar" style="margin-bottom:16px">
       <div class="filter-group">
-        <label for="m-round">Round</label>
-        <select id="m-round">
-          <option value="all">All Rounds</option>
-          <option value="79">Round 79 — April</option>
-          <option value="80">Round 80 — May</option>
-          <option value="81">Round 81 — June</option>
-          <option value="82">Round 82 — July</option>
-        </select>
+        <label>Round</label>
+        <div class="ms-wrap" id="ms-m-round">
+          <div class="ms-display" onclick="toggleMS('ms-m-round')">
+            <span class="ms-label" id="ms-m-round-lbl">All Rounds</span>
+            <span class="ms-arrow">&#9660;</span>
+          </div>
+          <div class="ms-panel">
+            <label class="ms-opt all-opt"><input type="checkbox" value="all" checked onchange="msAllToggle('ms-m-round',this)"> All Rounds</label>
+            <label class="ms-opt"><input type="checkbox" value="79" onchange="msOptChange('ms-m-round')"> Round 79 — April</label>
+            <label class="ms-opt"><input type="checkbox" value="80" onchange="msOptChange('ms-m-round')"> Round 80 — May</label>
+            <label class="ms-opt"><input type="checkbox" value="81" onchange="msOptChange('ms-m-round')"> Round 81 — June</label>
+            <label class="ms-opt"><input type="checkbox" value="82" onchange="msOptChange('ms-m-round')"> Round 82 — July</label>
+          </div>
+        </div>
       </div>
       <div class="filter-group">
-        <label for="m-type">Outlet Type</label>
-        <select id="m-type">
-          <option value="all">All Types</option>
-          <option value="Impulse &amp; Grocery">Impulse &amp; Grocery</option>
-          <option value="Gas Station">Gas Station</option>
-          <option value="Supermarket">Supermarket</option>
-          <option value="Bazar">Bazar</option>
-        </select>
+        <label>Outlet Type</label>
+        <div class="ms-wrap" id="ms-m-type">
+          <div class="ms-display" onclick="toggleMS('ms-m-type')">
+            <span class="ms-label" id="ms-m-type-lbl">All Types</span>
+            <span class="ms-arrow">&#9660;</span>
+          </div>
+          <div class="ms-panel">
+            <label class="ms-opt all-opt"><input type="checkbox" value="all" checked onchange="msAllToggle('ms-m-type',this)"> All Types</label>
+            <label class="ms-opt"><input type="checkbox" value="Impulse &amp; Grocery" onchange="msOptChange('ms-m-type')"> Impulse &amp; Grocery</label>
+            <label class="ms-opt"><input type="checkbox" value="Gas Station" onchange="msOptChange('ms-m-type')"> Gas Station</label>
+            <label class="ms-opt"><input type="checkbox" value="Supermarket" onchange="msOptChange('ms-m-type')"> Supermarket</label>
+            <label class="ms-opt"><input type="checkbox" value="Bazar" onchange="msOptChange('ms-m-type')"> Bazar</label>
+          </div>
+        </div>
       </div>
       <div class="filter-group" style="flex:1;min-width:200px;max-width:280px">
         <label for="m-search">Search Outlet</label>
@@ -2203,8 +2221,8 @@ function makeCircle(color, radius) {
 
 function getMapFilters() {
   return {
-    round:      document.getElementById('m-round').value,
-    type:       document.getElementById('m-type').value,
+    round:      getMSValues('ms-m-round'),
+    type:       getMSValues('ms-m-type'),
     compliance: document.getElementById('m-compliance').value,
     colorBy:    document.getElementById('m-color').value,
   };
@@ -2217,8 +2235,8 @@ function applyMapFilters(data) {
   const f = getMapFilters();
   return base.filter(r => {
     if (!r.lat || !r.lon) return false;
-    if (f.round !== 'all' && String(r.round) !== f.round) return false;
-    if (f.type  !== 'all' && r.outlet_type   !== f.type)  return false;
+    if (f.round !== 'all' && !(Array.isArray(f.round) ? f.round.includes(String(r.round)) : String(r.round) === f.round)) return false;
+    if (f.type  !== 'all' && !(Array.isArray(f.type)  ? f.type.includes(r.outlet_type)       : r.outlet_type   === f.type))  return false;
     const mq = (document.getElementById('m-search')?.value||'').toLowerCase().trim();
     if (mq) {
       const code = String(r.outlet_code||r.code||'').toLowerCase();
@@ -2368,15 +2386,17 @@ function buildQuarterTab(data, qFilter) {
   if (!qFilter) qFilter = 'all';
 
   // If a specific quarter selected, filter data to that quarter only
-  const filtered = (qFilter === 'all')
+  // Support both string and array qFilter
+  const qArr = Array.isArray(qFilter) ? qFilter : (qFilter === 'all' ? [] : [qFilter]);
+  const filtered = (qArr.length === 0)
     ? data
-    : data.filter(r => (MONTH_TO_Q[r.month] || 'Unknown') === qFilter);
+    : data.filter(r => qArr.includes(MONTH_TO_Q[r.month] || 'Unknown'));
 
   // Update label
   const lbl = document.getElementById('q-filter-label');
-  if (lbl) lbl.textContent = qFilter === 'all'
+  if (lbl) lbl.textContent = (qArr.length === 0)
     ? filtered.length.toLocaleString() + ' total audits'
-    : filtered.length.toLocaleString() + ' audits in ' + qFilter;
+    : filtered.length.toLocaleString() + ' audits in ' + qArr.join(', ');
 
   // Replace data reference for all subsequent logic
   data = filtered;
@@ -2531,17 +2551,10 @@ document.getElementById('btn-tab-quarter')?.addEventListener('click', () => {
     buildQuarterTab(ALL_DATA, activeQFilter);
     quarterBuilt = true;
   }
-  // Sync select to activeQFilter
-  const qs = document.getElementById('q-select');
-  if (qs) qs.value = activeQFilter;
+
 });
 
-// ── Quarter SELECT inside Quarterly tab ─────────────────────────────────────
-document.getElementById('q-select')?.addEventListener('change', function() {
-  activeQFilter = this.value;
-  buildQuarterTab(ALL_DATA, activeQFilter);
-  quarterBuilt = true;
-});
+// Quarter filter handled by ms-wrap msOptChange()
 
 
 
@@ -2559,7 +2572,10 @@ function updateMSLabel(id) {
   const allCb  = document.querySelector(`#${id} .all-opt input`);
   const opts   = [...document.querySelectorAll(`#${id} .ms-opt:not(.all-opt) input:checked`)];
   const lbl    = document.getElementById(`${id}-lbl`);
-  const defaults = {'ms-round':'All Rounds','ms-type':'All Types','ms-region':'All Regions'};
+  const defaults = {
+    'ms-round':'All Rounds','ms-type':'All Types','ms-region':'All Regions',
+    'ms-m-round':'All Rounds','ms-m-type':'All Types','ms-quarter':'All Quarters'
+  };
   if (!lbl) return;
   if (allCb?.checked || opts.length === 0) {
     lbl.innerHTML = defaults[id] || 'All';
@@ -2572,20 +2588,36 @@ function updateMSLabel(id) {
 
 function msAllToggle(id, cb) {
   if (cb.checked) {
-    // Uncheck all individual options
     document.querySelectorAll(`#${id} .ms-opt:not(.all-opt) input`).forEach(c => c.checked = false);
   }
   updateMSLabel(id);
-  render();
+  if (id === 'ms-m-round' || id === 'ms-m-type') {
+    updateMap();
+  } else if (id === 'ms-quarter') {
+    activeQFilter = 'all';
+    buildQuarterTab(ALL_DATA, 'all');
+    quarterBuilt = true;
+  } else {
+    render();
+  }
 }
 
 function msOptChange(id) {
   const allCb  = document.querySelector(`#${id} .all-opt input`);
   const anyChecked = [...document.querySelectorAll(`#${id} .ms-opt:not(.all-opt) input:checked`)].length > 0;
-  // Uncheck "All" if any specific option is selected
   if (allCb) allCb.checked = !anyChecked;
   updateMSLabel(id);
-  render();
+  // Route to correct handler based on which ms-wrap changed
+  if (id === 'ms-m-round' || id === 'ms-m-type') {
+    updateMap();
+  } else if (id === 'ms-quarter') {
+    const vals = getMSValues('ms-quarter');
+    activeQFilter = vals;
+    buildQuarterTab(ALL_DATA, activeQFilter);
+    quarterBuilt = true;
+  } else {
+    render();
+  }
 }
 
 // Close multi-selects when clicking outside
