@@ -133,8 +133,7 @@
     #tab-map .ms-panel { z-index: 5000 !important; }
     /* ── Sticky filter bars: all tabs ── */
     #tab-overview > .filters-bar,
-    #tab-map .filters-bar:first-of-type,
-    #tab-quarter .filters-bar {
+    #tab-map .filters-bar:first-of-type {
       position: sticky;
       top: 117px;
       z-index: 300;
@@ -761,9 +760,6 @@
   <button class="tab-btn active" data-tab="overview" id="btn-tab-overview">
     <span class="tab-icon">📊</span> Overview
   </button>
-  <button class="tab-btn" data-tab="quarter" id="btn-tab-quarter">
-    <span class="tab-icon">📅</span> Quarterly
-  </button>
   <button class="tab-btn" data-tab="map" id="btn-tab-map">
     <span class="tab-icon">🗺</span> Interactive Map
   </button>
@@ -973,75 +969,8 @@
 
 
 <!-- QUARTER TAB -->
-<div class="tab-panel" id="tab-quarter">
-  <div style="max-width:1600px;margin:0 auto;padding:20px 24px 40px">
 
-    <!-- Quarter SELECT filter -->
-    <div class="filters-bar fade-in" style="margin-bottom:24px;padding:12px 16px">
-      <div class="filter-group">
-        <label>Quarter</label>
-        <div class="ms-wrap" id="ms-quarter">
-          <div class="ms-display" onclick="toggleMS('ms-quarter')">
-            <span class="ms-label" id="ms-quarter-lbl">All Quarters</span>
-            <span class="ms-arrow">&#9660;</span>
-          </div>
-          <div class="ms-panel">
-            <label class="ms-opt all-opt"><input type="checkbox" value="all" checked onchange="msAllToggle('ms-quarter',this)"> All Quarters</label>
-            <label class="ms-opt"><input type="checkbox" value="Q1" onchange="msOptChange('ms-quarter')"> Q1</label>
-            <label class="ms-opt"><input type="checkbox" value="Q2" onchange="msOptChange('ms-quarter')"> Q2</label>
-            <label class="ms-opt"><input type="checkbox" value="Q3" onchange="msOptChange('ms-quarter')"> Q3</label>
-            <label class="ms-opt"><input type="checkbox" value="Q4" onchange="msOptChange('ms-quarter')"> Q4</label>
-          </div>
-        </div>
-      </div>
-      <span id="q-filter-label" style="color:var(--muted);font-size:12px;margin-left:8px;align-self:flex-end;padding-bottom:6px"></span>
-    </div>
-
-    <div class="section-label">Quarterly Performance</div>
-    <div class="kpi-grid" id="quarter-kpi-row"></div>
-
-    <div class="section-label" style="margin-top:24px">Round vs Quarter Breakdown</div>
-    <div class="charts-grid">
-      <div class="chart-card chart-wide fade-in">
-        <div class="chart-header">
-          <div>
-            <div class="chart-title">Compliance % by Round</div>
-            <div class="chart-subtitle">Grouped by quarter</div>
-          </div>
-        </div>
-        <div class="chart-wrap"><canvas id="c-quarter-score"></canvas></div>
-      </div>
-      <div class="chart-card chart-wide fade-in" style="animation-delay:.08s">
-        <div class="chart-header">
-          <div>
-            <div class="chart-title">Incentive EGP by Round</div>
-            <div class="chart-subtitle">Grouped by quarter</div>
-          </div>
-        </div>
-        <div class="chart-wrap"><canvas id="c-quarter-incentive"></canvas></div>
-      </div>
-    </div>
-
-    <div class="section-label" style="margin-top:24px">Quarter Summary Table</div>
-    <div class="table-card fade-in">
-      <div class="table-scroll">
-        <table id="quarter-table">
-          <thead><tr>
-            <th>Quarter</th>
-            <th>Rounds</th>
-            <th>Audits</th>
-            <th>Avg Score</th>
-            <th>Avail. Compliant</th>
-            <th>Total Incentive</th>
-          </tr></thead>
-          <tbody id="quarter-tbody"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- MAP TAB -->
+  <!-- MAP TAB -->
 <div class="tab-panel" id="tab-map">
   <div style="max-width:1600px;margin:0 auto;padding:20px 24px 40px">
 
@@ -2388,172 +2317,9 @@ document.getElementById('outlet-search-clear').addEventListener('click', functio
 /* ═══════════════════════════════════════════════════════════
    QUARTER TAB
 ═══════════════════════════════════════════════════════════ */
-const MONTH_TO_Q = {
-  'January':'Q1','February':'Q1','March':'Q1',
-  'April':'Q2','May':'Q2','June':'Q2',
-  'July':'Q3','August':'Q3','September':'Q3',
-  'October':'Q4','November':'Q4','December':'Q4'
-};
 
-function buildQuarterTab(data, qFilter) {
-  if (!qFilter) qFilter = 'all';
 
-  // If a specific quarter selected, filter data to that quarter only
-  // Support both string and array qFilter
-  const qArr = Array.isArray(qFilter) ? qFilter : (qFilter === 'all' ? [] : [qFilter]);
-  const filtered = (qArr.length === 0)
-    ? data
-    : data.filter(r => qArr.includes(MONTH_TO_Q[r.month] || 'Unknown'));
 
-  // Update label
-  const lbl = document.getElementById('q-filter-label');
-  if (lbl) lbl.textContent = (qArr.length === 0)
-    ? filtered.length.toLocaleString() + ' total audits'
-    : filtered.length.toLocaleString() + ' audits in ' + qArr.join(', ');
-
-  // Replace data reference for all subsequent logic
-  data = filtered;
-
-  // Group data by quarter-year
-  const quarters = {};
-  data.forEach(r => {
-    const q = MONTH_TO_Q[r.month] || 'Unknown';
-    const yr = '2026';
-    const key = `${q} ${yr}`;
-    if (!quarters[key]) quarters[key] = { audits:[], rounds:new Set(), months:new Set() };
-    quarters[key].audits.push(r);
-    if (r.round) quarters[key].rounds.add(r.round);
-    if (r.month) quarters[key].months.add(r.month);
-  });
-
-  const qKeys = Object.keys(quarters).sort();
-
-  // ── KPI summary cards ─────────────────────────────────
-  const kpiRow = document.getElementById('quarter-kpi-row');
-  kpiRow.innerHTML = qKeys.map((q, i) => {
-    const { audits, rounds } = quarters[q];
-    const avgScore = audits.reduce((s,r) => s + (r.overall_score||0), 0) / audits.length;
-    const incentive = audits.reduce((s,r) => s + (r.total_incentive||0), 0);
-    const compliant = audits.filter(r => r.avail_compliance === 1).length;
-    const compPct   = (compliant / audits.length * 100).toFixed(1);
-    const colors = ['red','gold','green','red'];
-    return `<div class="kpi-card ${colors[i%colors.length]} fade-in" style="animation-delay:${i*0.08}s">
-      <div class="kpi-icon">📅</div>
-      <div class="kpi-label">${q}</div>
-      <div class="kpi-value">${audits.length.toLocaleString()}</div>
-      <div class="kpi-sub">Rounds: ${[...rounds].sort().join(', ')}</div>
-      <div class="kpi-sub">Avg Score: ${(avgScore*100).toFixed(1)}%</div>
-      <div class="kpi-sub">Avail: ${compPct}% · ${incentive.toFixed(0)} EGP</div>
-    </div>`;
-  }).join('');
-
-  // ── Round-level score chart ────────────────────────────
-  // Get all rounds sorted
-  const allRounds = [...new Set(data.map(r=>r.round))].sort((a,b)=>a-b);
-  const roundLabels = allRounds.map(r => `R${r}`);
-  const roundColors = allRounds.map(r => {
-    const month = (data.find(d=>d.round===r)||{}).month||'';
-    const q = MONTH_TO_Q[month]||'Unknown';
-    const palette = {'Q1':'#3b82f6','Q2':'#e8001c','Q3':'#f5c518','Q4':'#10b981'};
-    return palette[q] || '#94a3b8';
-  });
-
-  const roundScores = allRounds.map(r => {
-    const sub = data.filter(d=>d.round===r);
-    if (!sub.length) return 0;
-    return (sub.reduce((s,d)=>s+(d.overall_score||0),0)/sub.length*100);
-  });
-  const roundIncentives = allRounds.map(r =>
-    data.filter(d=>d.round===r).reduce((s,d)=>s+(d.total_incentive||0),0)
-  );
-
-  // Score chart
-  const scoreCtx = document.getElementById('c-quarter-score');
-  if (scoreCtx) {
-    if (scoreCtx._qChart) scoreCtx._qChart.destroy();
-    scoreCtx._qChart = new Chart(scoreCtx, {
-      type:'bar',
-      data:{
-        labels: roundLabels,
-        datasets:[{
-          label:'Avg Compliance %',
-          data: roundScores.map(v=>v.toFixed(1)),
-          backgroundColor: roundColors.map(c=>c+'99'),
-          borderColor: roundColors,
-          borderWidth:2, borderRadius:6,
-          datalabels: {
-            display: true, anchor:'end', align:'top',
-            color:'#cbd5e1', font:{size:11,weight:'600'},
-            formatter: v => parseFloat(v).toFixed(1)+'%'
-          }
-        }]
-      },
-      options:{
-        responsive:true, maintainAspectRatio:false,
-        plugins:{legend:{display:false},
-          tooltip:{callbacks:{label:ctx=>`${ctx.raw}%`}}},
-        scales:{
-          x:{ticks:{color:'#94a3b8'},grid:{color:'rgba(255,255,255,0.05)'}},
-          y:{ticks:{color:'#94a3b8',callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.05)'},
-             suggestedMin:0,suggestedMax:100}
-        }
-      }
-    });
-  }
-
-  // Incentive chart
-  const incCtx = document.getElementById('c-quarter-incentive');
-  if (incCtx) {
-    if (incCtx._qChart) incCtx._qChart.destroy();
-    incCtx._qChart = new Chart(incCtx, {
-      type:'bar',
-      data:{
-        labels: roundLabels,
-        datasets:[{
-          label:'Incentive EGP',
-          data: roundIncentives,
-          backgroundColor: roundColors.map(c=>c+'99'),
-          borderColor: roundColors,
-          borderWidth:2, borderRadius:6,
-          datalabels: {
-            display: true, anchor:'end', align:'top',
-            color:'#f5c518', font:{size:10,weight:'600'},
-            formatter: v => Number(v).toLocaleString(undefined,{maximumFractionDigits:0})
-          }
-        }]
-      },
-      options:{
-        responsive:true, maintainAspectRatio:false,
-        plugins:{legend:{display:false},
-          tooltip:{callbacks:{label:ctx=>`${Number(ctx.raw).toLocaleString()} EGP`}}},
-        scales:{
-          x:{ticks:{color:'#94a3b8'},grid:{color:'rgba(255,255,255,0.05)'}},
-          y:{ticks:{color:'#94a3b8',callback:v=>v.toLocaleString()},
-             grid:{color:'rgba(255,255,255,0.05)'}}
-        }
-      }
-    });
-  }
-
-  // ── Summary table ──────────────────────────────────────
-  const tbody = document.getElementById('quarter-tbody');
-  tbody.innerHTML = qKeys.map(q => {
-    const { audits, rounds } = quarters[q];
-    const avgScore = audits.reduce((s,r)=>s+(r.overall_score||0),0)/audits.length;
-    const incentive = audits.reduce((s,r)=>s+(r.total_incentive||0),0);
-    const compliant = audits.filter(r=>r.avail_compliance===1).length;
-    const compPct   = (compliant/audits.length*100).toFixed(1);
-    const scoreCol = avgScore>=0.7?'#10b981':avgScore>=0.5?'#f5c518':'#e8001c';
-    return `<tr>
-      <td><strong>${q}</strong></td>
-      <td style="color:var(--muted)">${[...rounds].sort().map(r=>`R${r}`).join(' · ')}</td>
-      <td>${audits.length.toLocaleString()}</td>
-      <td style="color:${scoreCol};font-weight:600">${(avgScore*100).toFixed(1)}%</td>
-      <td>${compliant.toLocaleString()} <span style="color:var(--muted)">(${compPct}%)</span></td>
-      <td style="color:var(--gold);font-weight:600">${incentive.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',')} EGP</td>
-    </tr>`;
-  }).join('');
-}
 
 // ── Quarter main tab: build on first visit ──────────────────────────────────
 let quarterBuilt   = false;
@@ -2567,7 +2333,7 @@ document.getElementById('btn-tab-quarter')?.addEventListener('click', () => {
 
 });
 
-// Quarter filter handled by ms-wrap msOptChange()
+
 
 
 
@@ -2587,7 +2353,7 @@ function updateMSLabel(id) {
   const lbl    = document.getElementById(`${id}-lbl`);
   const defaults = {
     'ms-round':'All Rounds','ms-type':'All Types','ms-region':'All Regions',
-    'ms-m-round':'All Rounds','ms-m-type':'All Types','ms-quarter':'All Quarters'
+    'ms-m-round':'All Rounds','ms-m-type':'All Types'
   };
   if (!lbl) return;
   if (allCb?.checked || opts.length === 0) {
@@ -2606,10 +2372,6 @@ function msAllToggle(id, cb) {
   updateMSLabel(id);
   if (id === 'ms-m-round' || id === 'ms-m-type') {
     updateMap();
-  } else if (id === 'ms-quarter') {
-    activeQFilter = 'all';
-    buildQuarterTab(ALL_DATA, 'all');
-    quarterBuilt = true;
   } else {
     render();
   }
@@ -2623,11 +2385,6 @@ function msOptChange(id) {
   // Route to correct handler based on which ms-wrap changed
   if (id === 'ms-m-round' || id === 'ms-m-type') {
     updateMap();
-  } else if (id === 'ms-quarter') {
-    const vals = getMSValues('ms-quarter');
-    activeQFilter = vals;
-    buildQuarterTab(ALL_DATA, activeQFilter);
-    quarterBuilt = true;
   } else {
     render();
   }
