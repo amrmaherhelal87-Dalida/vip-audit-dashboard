@@ -118,15 +118,19 @@
       margin-bottom: 28px;
       align-items: center;
     }
-    /* Sticky main filter bar */
-    #tab-overview > .filters-bar {
+    /* ── Sticky filter bars: all tabs ── */
+    #tab-overview > .filters-bar,
+    #tab-map .filters-bar:first-of-type,
+    #tab-quarter .filters-bar {
       position: sticky;
-      top: 0;
-      z-index: 500;
-      backdrop-filter: blur(10px);
-      background: rgba(15,23,42,0.95);
-      border-radius: 0 0 var(--radius) var(--radius);
-      border-top: none;
+      top: 117px;
+      z-index: 300;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      background: rgba(8,12,24,0.92) !important;
+      border: 1px solid rgba(232,0,28,0.15) !important;
+      border-radius: var(--radius);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 1px 0 rgba(232,0,28,0.1);
       margin-bottom: 20px;
     }
     .filters-bar label { font-size: 12px; color: var(--muted); font-weight: 500; margin-right: 4px; }
