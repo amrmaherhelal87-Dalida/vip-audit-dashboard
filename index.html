@@ -50,7 +50,7 @@
       padding: 0 32px;
       position: sticky;
       top: 0;
-      z-index: 100;
+      z-index: 2200;
       backdrop-filter: blur(20px);
     }
     .header-inner {
@@ -118,33 +118,24 @@
       margin-bottom: 28px;
       align-items: center;
     }
-    /* ── Map filter bar: above Leaflet tiles (z ~400) ── */
-    #tab-map .filters-bar {
-      position: sticky;
-      top: 117px;
-      z-index: 1200 !important;
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      background: rgba(8,12,24,0.95) !important;
-      border: 1px solid rgba(232,0,28,0.2) !important;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.6), 0 1px 0 rgba(232,0,28,0.1);
-    }
-    /* ms-panel dropdowns in map tab must clear Leaflet z-index */
-    #tab-map .ms-panel { z-index: 5000 !important; }
-    /* ── Sticky filter bars: all tabs ── */
+    /* ── Sticky filter bars: Overview & Map ── */
+    .filters-bar,
     #tab-overview > .filters-bar,
-    #tab-map .filters-bar:first-of-type {
-      position: sticky;
-      top: 117px;
-      z-index: 300;
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      background: rgba(8,12,24,0.92) !important;
-      border: 1px solid rgba(232,0,28,0.15) !important;
+    #tab-map .filters-bar,
+    #tab-map > .filters-bar {
+      position: sticky !important;
+      top: 117px !important;
+      z-index: 2000 !important;
+      backdrop-filter: blur(20px) !important;
+      -webkit-backdrop-filter: blur(20px) !important;
+      background: rgba(13,18,37,0.96) !important;
+      border: 1px solid rgba(232,0,28,0.25) !important;
       border-radius: var(--radius);
-      box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 1px 0 rgba(232,0,28,0.1);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 1px 0 rgba(232,0,28,0.15) !important;
       margin-bottom: 20px;
     }
+    /* ms-panel dropdowns must float above Leaflet and cards */
+    .ms-panel, #tab-map .ms-panel { z-index: 9999 !important; }
     .filters-bar label { font-size: 12px; color: var(--muted); font-weight: 500; margin-right: 4px; }
     .filters-bar select {
       background: var(--surface2);
@@ -405,7 +396,7 @@
   font-weight: 700;
 }
 /* Map search input */
-#m-search {
+#m-search, #outlet-search {
   background: var(--surface, #1e293b);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 8px;
@@ -413,12 +404,13 @@
   color: #e2e8f0;
   font-size: 14px;
   font-family: inherit;
-  width: 220px;
   outline: none;
   transition: border-color .2s;
 }
-#m-search:focus { border-color: rgba(232,0,28,.5); }
-#m-search::placeholder { color: #4b5563; }
+#m-search { width: 220px; }
+#outlet-search { width: 260px; }
+#m-search:focus, #outlet-search:focus { border-color: rgba(232,0,28,.5); }
+#m-search::placeholder, #outlet-search::placeholder { color: #4b5563; }
 
 .tab-nav {
       display: flex; gap: 4px;
@@ -529,15 +521,16 @@
 
     /* 3. Nav tabs — sliding red underline indicator ─────────── */
     .tab-nav {
-      background: rgba(8,12,24,0.7);
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      backdrop-filter: blur(12px);
+      background: rgba(8,12,24,0.96) !important;
+      border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+      backdrop-filter: blur(20px) !important;
+      -webkit-backdrop-filter: blur(20px) !important;
       padding: 0 32px;
       display: flex;
       gap: 4px;
       position: sticky;
       top: 68px;
-      z-index: 400;
+      z-index: 2100 !important;
     }
     .tab-btn {
       position: relative;
@@ -642,10 +635,14 @@
 
     /* 8. Filter Bar — frosted glass upgrade ─────────────────── */
     .filters-bar {
-      background: rgba(17,24,39,0.85) !important;
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255,255,255,0.08) !important;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+      position: sticky !important;
+      top: 117px !important;
+      z-index: 2000 !important;
+      background: rgba(13,18,37,0.96) !important;
+      backdrop-filter: blur(20px) !important;
+      -webkit-backdrop-filter: blur(20px) !important;
+      border: 1px solid rgba(232,0,28,0.25) !important;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 1px 0 rgba(232,0,28,0.15) !important;
     }
     .ms-display, .filters-bar select {
       background: rgba(26,34,56,0.8) !important;
@@ -911,7 +908,7 @@
     <div class="chart-header">
       <div>
         <div class="chart-title" id="kpi-contract-title">Impulse &amp; Grocery — KPI Compliance</div>
-        <div class="chart-subtitle" id="kpi-contract-subtitle">Compliance % and total incentive EGP per KPI for this contract type</div>
+        <div class="chart-subtitle" id="kpi-contract-subtitle">Avg compliance % per KPI for this contract type</div>
       </div>
       <div class="chart-tabs">
         <button class="chart-tab-btn active" data-contract-tab="Impulse &amp; Grocery">Impulse &amp; Grocery</button>
@@ -921,11 +918,17 @@
       </div>
     </div>
     <div class="chart-wrap" style="height:280px"><canvas id="c-kpi-contract"></canvas></div>
+    <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--border)">
+      <div class="chart-title" id="kpi-contract-trend-title" style="font-size:14px">Impulse &amp; Grocery — KPI Trend by Month</div>
+      <div class="chart-subtitle" id="kpi-contract-trend-subtitle">Compliance % per KPI across rounds (Apr–Jul)</div>
+    </div>
+    <div class="chart-wrap" style="height:280px"><canvas id="c-kpi-contract-trend"></canvas></div>
   </div>
 
   <!-- Charts Row 2 -->
-  <div class="section-label" style="margin-top:48px">KPI Deep Dive</div>
-  <div class="charts-grid" id="kpi-cards-container"></div>
+  <!-- KPI Deep Dive: temporarily hidden per request, section kept in DOM/JS -->
+  <div class="section-label" style="margin-top:48px;display:none">KPI Deep Dive</div>
+  <div class="charts-grid" id="kpi-cards-container" style="display:none"></div>
 
   <!-- Data Table -->
   <div class="section-label">Outlet Detail</div>
@@ -938,8 +941,7 @@
       <div style="display:flex;align-items:center;gap:8px">
         <input type="text" id="outlet-search"
           placeholder="🔍  Search by code or name…"
-          style="padding:7px 14px;border-radius:8px;border:1px solid var(--border);
-                 background:var(--surface);color:var(--text);font-size:13px;width:260px;outline:none">
+          oninput="renderTable(applyFilters(ALL_DATA))">
         <button id="outlet-search-clear" title="Clear search"
           style="padding:6px 10px;border-radius:8px;border:1px solid var(--border);
                  background:var(--surface);color:var(--muted);cursor:pointer;font-size:13px">✕</button>
@@ -972,7 +974,6 @@
 
   <!-- MAP TAB -->
 <div class="tab-panel" id="tab-map">
-  <div style="max-width:1600px;margin:0 auto;padding:20px 24px 40px">
 
     <!-- Map filters -->
     <div class="filters-bar" style="margin-bottom:16px">
@@ -1053,7 +1054,6 @@
         </div>
       </div>
     </div>
-  </div>
 </div><!-- /tab-map -->
 
 </main>
@@ -1067,9 +1067,15 @@
 /* ═══════════════════════════════════════════════
    CHART DEFAULTS
 ═══════════════════════════════════════════════ */
-Chart.defaults.color = '#94a3b8';
-Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
-Chart.defaults.font.family = "'Inter', sans-serif";
+if (typeof Chart !== 'undefined') {
+  try {
+    Chart.defaults.color = '#94a3b8';
+    Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+    Chart.defaults.font.family = "'Inter', sans-serif";
+  } catch (e) { console.error('Chart.defaults setup failed:', e); }
+} else {
+  console.error('Chart.js failed to load — charts will be unavailable, but search/tabs/table will still work.');
+}
 
 const RED    = '#e8001c';
 const GOLD   = '#f5c518';
@@ -1302,6 +1308,13 @@ function updateKPIs(data) {
 function avgScore(arr) {
   const vals = arr.map(r=>r.overall_score).filter(v=>typeof v==='number');
   return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
+}
+function debounce(fn, ms) {
+  let t;
+  return function(...args) {
+    clearTimeout(t);
+    t = setTimeout(() => fn.apply(this, args), ms);
+  };
 }
 function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
 function ctx(id) { return document.getElementById(id).getContext('2d'); }
@@ -1589,12 +1602,17 @@ function scoreFill(v) {
 
 function renderTable(data) {
   const tbody = document.getElementById('table-body');
-  // Apply outlet search filter
+  // Apply outlet search filter — matches code, name, type, region or
+  // governorate; multi-word queries require every word to match somewhere.
   const searchQ = (document.getElementById('outlet-search')?.value || '').toLowerCase().trim();
-  let filtered = searchQ
-    ? data.filter(r =>
-        String(r.outlet_code||'').toLowerCase().includes(searchQ) ||
-        String(r.outlet_name||'').toLowerCase().includes(searchQ))
+  const searchTerms = searchQ ? searchQ.split(/\s+/).filter(Boolean) : [];
+  let filtered = searchTerms.length
+    ? data.filter(r => {
+        const haystack = [
+          r.outlet_code, r.outlet_name, r.outlet_type, r.region, r.governorate
+        ].map(v => String(v ?? '').toLowerCase()).join(' | ');
+        return searchTerms.every(term => haystack.includes(term));
+      })
     : data;
   const show = filtered.slice(0, 200);
   document.getElementById('table-count').textContent = `Showing ${show.length.toLocaleString()} of ${filtered.length.toLocaleString()} records${searchQ ? ' (filtered)' : ''}`;
@@ -1679,18 +1697,28 @@ document.querySelectorAll('#data-table thead th').forEach(th => {
 /* ═══════════════════════════════════════════════
    FULL RENDER
 ═══════════════════════════════════════════════ */
+// Runs each render step in isolation — a failure in one chart (e.g. a bad
+// data field) is logged and skipped instead of silently aborting everything
+// after it (which used to be able to break search/table/tabs too).
+function safeStep(name, fn) {
+  try { fn(); }
+  catch (e) { console.error('render step "' + name + '" failed:', e); }
+}
+
 function render() {
   const data = applyFilters(ALL_DATA);
-  updateKPIs(data);
-  buildTrend(data);
-  buildOutletChart(data);
-  buildRegionChart(data);
-  buildGovernorateChart(data);
-  buildKPIContractChart(data);
-  renderAllKPICards();
-  renderTable(data);
-  if (mapInitialised) updateMap();
+  safeStep('updateKPIs',              () => updateKPIs(data));
+  safeStep('buildTrend',              () => buildTrend(data));
+  safeStep('buildOutletChart',        () => buildOutletChart(data));
+  safeStep('buildRegionChart',        () => buildRegionChart(data));
+  safeStep('buildGovernorateChart',   () => buildGovernorateChart(data));
+  safeStep('buildKPIContractChart',      () => buildKPIContractChart(data));
+  safeStep('buildKPIContractTrendChart', () => buildKPIContractTrendChart(data));
+  safeStep('renderAllKPICards',       () => renderAllKPICards());
+  safeStep('renderTable',             () => renderTable(data));
+  safeStep('updateMap',               () => { if (mapInitialised) updateMap(); });
 }
+
 
 /* ═══════════════════════════════════════════════
    KPI DEEP DIVE — one combo chart (bar % + line EGP)
@@ -1954,46 +1982,52 @@ const KPI_BY_CONTRACT = {
   ],
 };
 
-const CONTRACT_COLORS = {
-  'Impulse & Grocery': ['#e8001c','#c0392b','#e74c3c','#ff6b6b'],
-  'Supermarket':       ['#f5c518','#f39c12','#e67e22','#d35400','#f5c518','#f39c12','#e67e22'],
-  'Gas Station':       ['#3b82f6','#2563eb','#1d4ed8','#60a5fa','#3b82f6','#2563eb'],
-  'Bazar':             ['#8b5cf6','#7c3aed','#6d28d9','#a78bfa','#8b5cf6','#7c3aed'],
-};
+// Shared distinct palette — bright, high-contrast hues chosen for legibility
+// on the dashboard's dark background, alternating warm/cool so adjacent
+// KPIs never look similar. Reused across the compliance bar chart and the
+// trend line chart so each KPI keeps the same color in both.
+const KPI_PALETTE = [
+  '#fb3a52', // red
+  '#38bdf8', // sky blue
+  '#fbbf24', // amber
+  '#34d399', // emerald
+  '#f472b6', // pink
+  '#22d3ee', // cyan
+  '#fb923c', // orange
+  '#a78bfa', // violet
+];
 
 let kpiContractChart = null;
+let kpiContractTrendChart = null;
 let activeContractType = 'Impulse & Grocery';
 
 function buildKPIContractChart(data) {
   const type  = activeContractType;
   const kpis  = KPI_BY_CONTRACT[type] || [];
-  const colors = CONTRACT_COLORS[type] || ['#94a3b8'];
+  const colors = kpis.map((_, i) => KPI_PALETTE[i % KPI_PALETTE.length]);
 
   // Filter to this outlet type only
   const sub = data.filter(r => r.outlet_type === type);
   const n   = sub.length;
 
-  // Compute compliance % and total incentive per KPI
+  // Compute compliance % per KPI
   const labels  = kpis.map(k => k.label);
   const compPct = kpis.map(k => {
     const valid = sub.filter(r => r[k.comp] === 0 || r[k.comp] === 1);
     if (!valid.length) return 0;
     return parseFloat((valid.filter(r => r[k.comp] === 1).length / valid.length * 100).toFixed(1));
   });
-  const incVals = kpis.map(k =>
-    sub.reduce((s, r) => s + (typeof r[k.inc] === 'number' ? r[k.inc] : 0), 0)
-  );
 
   const ctx = document.getElementById('c-kpi-contract');
   if (!ctx) return;
   if (kpiContractChart) { kpiContractChart.destroy(); kpiContractChart = null; }
 
   kpiContractChart = new Chart(ctx, {
+    type: 'bar',
     data: {
       labels,
       datasets: [
         {
-          type: 'bar',
           label: 'Avg Compliance %',
           data: compPct,
           backgroundColor: colors.map(c => c + 'bb'),
@@ -2001,28 +2035,11 @@ function buildKPIContractChart(data) {
           borderWidth: 2,
           borderRadius: 6,
           yAxisID: 'yLeft',
-          order: 2,
           datalabels: {
             display: true, anchor:'end', align:'top',
             color:'#cbd5e1', font:{size:10,weight:'600'},
             formatter: v => v+'%'
           },
-        },
-        {
-          type: 'line',
-          label: 'Total Incentive (EGP)',
-          data: incVals,
-          borderColor: '#f5c518',
-          backgroundColor: 'rgba(245,197,24,0.08)',
-          pointBackgroundColor: '#f5c518',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-          pointRadius: 5,
-          pointHoverRadius: 8,
-          tension: 0.35,
-          fill: false,
-          yAxisID: 'yRight',
-          order: 1,
         }
       ]
     },
@@ -2031,15 +2048,10 @@ function buildKPIContractChart(data) {
       maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: {
-          display: true,
-          labels: { color: '#94a3b8', usePointStyle: true, padding: 20, font: { size: 12 } }
-        },
+        legend: { display: false },
         tooltip: {
           callbacks: {
-            label: ctx => ctx.dataset.label === 'Avg Compliance %'
-              ? `Compliance %: ${ctx.raw}%`
-              : `Total Incentive (EGP): ${Number(ctx.raw).toLocaleString(undefined,{maximumFractionDigits:0})}`
+            label: ctx => `Compliance %: ${ctx.raw}%`
           }
         }
       },
@@ -2054,11 +2066,6 @@ function buildKPIContractChart(data) {
           ticks: { color: '#94a3b8', callback: v => v + '%' },
           grid:  { color: 'rgba(255,255,255,0.05)' },
           title: { display: false }
-        },
-        yRight: {
-          type: 'linear', position: 'right',
-          ticks: { color: '#f5c518', callback: v => v.toLocaleString() },
-          grid:  { drawOnChartArea: false }
         }
       }
     }
@@ -2069,16 +2076,94 @@ function buildKPIContractChart(data) {
   const subtitleEl = document.getElementById('kpi-contract-subtitle');
   if (titleEl)    titleEl.textContent    = type + ' — KPI Compliance';
   if (subtitleEl) subtitleEl.textContent =
-    n.toLocaleString() + ' outlets · Compliance % and incentive EGP per monitored KPI';
+    n.toLocaleString() + ' outlets · Avg compliance % per monitored KPI';
 }
 
-// Wire up the 4 contract-type tabs
+function buildKPIContractTrendChart(data) {
+  const type  = activeContractType;
+  const kpis  = KPI_BY_CONTRACT[type] || [];
+  const colors = KPI_PALETTE;
+
+  const sub    = data.filter(r => r.outlet_type === type);
+  const rounds = ROUNDS_MONTHS.map(r => r[0]);
+  const months = ROUNDS_MONTHS.map(r => r[1]);
+
+  const datasets = kpis.map((k, i) => {
+    const color = colors[i % colors.length];
+    const values = rounds.map(r => {
+      const valid = sub.filter(d => d.round === r && (d[k.comp] === 0 || d[k.comp] === 1));
+      if (!valid.length) return null;
+      return parseFloat((valid.filter(d => d[k.comp] === 1).length / valid.length * 100).toFixed(1));
+    });
+    return {
+      label: k.label,
+      data: values,
+      borderColor: color,
+      backgroundColor: color + '22',
+      pointBackgroundColor: color,
+      pointBorderColor: '#fff',
+      pointBorderWidth: 1.5,
+      pointRadius: 4,
+      pointHoverRadius: 7,
+      borderWidth: 2,
+      tension: 0.35,
+      fill: false,
+      spanGaps: true,
+    };
+  });
+
+  const ctxEl = document.getElementById('c-kpi-contract-trend');
+  if (!ctxEl) return;
+  if (kpiContractTrendChart) { kpiContractTrendChart.destroy(); kpiContractTrendChart = null; }
+
+  kpiContractTrendChart = new Chart(ctxEl, {
+    type: 'line',
+    data: { labels: months, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          display: true,
+          labels: { color: '#94a3b8', usePointStyle: true, padding: 16, font: { size: 11 } }
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => `${ctx.dataset.label}: ${ctx.raw === null ? '—' : ctx.raw + '%'}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#94a3b8', font: { size: 12 } },
+          grid:  { color: 'rgba(255,255,255,0.05)' }
+        },
+        y: {
+          min: 0, max: 100,
+          ticks: { color: '#94a3b8', callback: v => v + '%' },
+          grid:  { color: 'rgba(255,255,255,0.05)' }
+        }
+      }
+    }
+  });
+
+  const titleEl    = document.getElementById('kpi-contract-trend-title');
+  const subtitleEl = document.getElementById('kpi-contract-trend-subtitle');
+  if (titleEl)    titleEl.textContent    = type + ' — KPI Trend by Month';
+  if (subtitleEl) subtitleEl.textContent = 'Compliance % per KPI across rounds (Apr–Jul)';
+}
+
+// Wire up the 4 contract-type tabs — drives both the compliance bar chart
+// and the month-by-month trend chart below it.
 document.querySelectorAll('[data-contract-tab]').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('[data-contract-tab]').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     activeContractType = btn.dataset.contractTab;
-    buildKPIContractChart(applyFilters(ALL_DATA));
+    const filtered = applyFilters(ALL_DATA);
+    buildKPIContractChart(filtered);
+    buildKPIContractTrendChart(filtered);
   });
 });
 
@@ -2193,9 +2278,13 @@ function applyMapFilters(data) {
 
 function initMap() {
   leafletMap = L.map('leaflet-map', { center:[26.8,30.8], zoom:6, preferCanvas:true });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
-    subdomains:'abcd', maxZoom:19,
+  // Switched from CARTO's raster basemap (basemaps.cartocdn.com) — as of
+  // Aug 2026 CARTO requires a free API key for that legacy raster service
+  // and watermarks unauthenticated tiles with "API KEY REQUIRED". Standard
+  // OpenStreetMap tiles need no key and match the dashboard's light theme.
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    subdomains:'abc', maxZoom:19,
   }).addTo(leafletMap);
   markerCluster = L.markerClusterGroup({ maxClusterRadius:50, showCoverageOnHover:false });
   leafletMap.addLayer(markerCluster);
@@ -2294,21 +2383,33 @@ function updateMap() {
     leafletMap.fitBounds(markerCluster.getBounds(), {padding:[40,40], maxZoom:12});
 }
 
-['m-round','m-type','m-compliance','m-color'].forEach(id =>
+// NOTE: 'm-round' and 'm-type' are NOT plain <select> elements — they're the
+// custom multi-select widgets (ms-m-round / ms-m-type), already wired via
+// msOptChange()/msAllToggle() below. Only m-compliance/m-color are real
+// <select> elements, so only they get a plain 'change' listener here.
+['m-compliance','m-color'].forEach(id =>
   document.getElementById(id).addEventListener('change', () => { if(mapInitialised) updateMap(); })
 );
 document.getElementById('btn-map-reset').addEventListener('click', () => {
-  ['m-round','m-type','m-compliance'].forEach(id => document.getElementById(id).value='all');
+  ['m-compliance'].forEach(id => document.getElementById(id).value='all');
   document.getElementById('m-color').value = 'type';
+  // Reset the two multi-select widgets back to "All"
+  ['ms-m-round','ms-m-type'].forEach(id => {
+    const allCb = document.querySelector(`#${id} .all-opt input`);
+    if (allCb) {
+      document.querySelectorAll(`#${id} .ms-opt:not(.all-opt) input`).forEach(c => c.checked = false);
+      allCb.checked = true;
+      updateMSLabel(id);
+    }
+  });
+  document.getElementById('m-search').value = '';
   if (mapInitialised) updateMap();
 });
 
 /* ═══════════════════════════════════════════════════════════
-   OUTLET SEARCH
+   OUTLET SEARCH — instant filtering via oninput on the input
+   itself (same pattern as the Interactive Map's #m-search).
 ═══════════════════════════════════════════════════════════ */
-document.getElementById('outlet-search').addEventListener('input', function() {
-  renderTable(applyFilters(ALL_DATA));
-});
 document.getElementById('outlet-search-clear').addEventListener('click', function() {
   document.getElementById('outlet-search').value = '';
   renderTable(applyFilters(ALL_DATA));
