@@ -1141,19 +1141,12 @@
         <button class="chart-tab-btn" data-contract-tab="Bazar">Bazar</button>
       </div>
     </div>
-    <!-- Two charts side by side -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
-      <div>
-        <div class="chart-wrap" style="height:220px"><canvas id="c-kpi-contract"></canvas></div>
-      </div>
-      <div>
-        <div style="margin-bottom:8px">
-          <div class="chart-title" id="kpi-contract-trend-title" style="font-size:13px">KPI Trend by Month</div>
-          <div class="chart-subtitle" id="kpi-contract-trend-subtitle">Compliance % per KPI across rounds</div>
-        </div>
-        <div class="chart-wrap" style="height:220px"><canvas id="c-kpi-contract-trend"></canvas></div>
-      </div>
+    <div class="chart-wrap" style="height:180px"><canvas id="c-kpi-contract"></canvas></div>
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+      <div class="chart-title" id="kpi-contract-trend-title" style="font-size:13px">KPI Trend by Month</div>
+      <div class="chart-subtitle" id="kpi-contract-trend-subtitle">Compliance % per KPI across rounds (Apr–Jul)</div>
     </div>
+    <div class="chart-wrap" style="height:180px;margin-top:8px"><canvas id="c-kpi-contract-trend"></canvas></div>
   </div>
 
 
