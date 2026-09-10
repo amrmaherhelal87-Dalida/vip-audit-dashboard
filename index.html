@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VIP Audit Dashboard — Q2 2026</title>
+  <title>Red Bull Egypt VIP Audit Dashboard</title>
   <meta name="description" content="Red Bull VIP Outlet Audit Dashboard — Q2 2026 KPI compliance, incentive tracking and regional performance." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -60,7 +60,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      height: 68px;
+      height: 68px; min-height: 68px;
       gap: 16px;
     }
     .logo-area {
@@ -125,7 +125,7 @@
     #tab-map .filters-bar,
     #tab-map > .filters-bar {
       position: sticky !important;
-      top: 117px !important;
+      top: 68px !important;
       z-index: 2000 !important;
       backdrop-filter: blur(20px) !important;
       -webkit-backdrop-filter: blur(20px) !important;
@@ -463,14 +463,7 @@
     .export-item:hover { background: rgba(255,255,255,0.06); color: #e2e8f0; }
     .export-item .ei-icon { font-size: 16px; }
 
-    .tab-nav {
-      display: flex; gap: 4px;
-      max-width: 1600px; margin: 0 auto;
-      padding: 0 24px;
-      border-bottom: 1px solid var(--border);
-      background: var(--bg2);
-      position: sticky; top: 68px; z-index: 90;
-    }
+    .header-tabs { display:flex; align-items:stretch; }
     .tab-btn {
       padding: 14px 22px;
       font-size: 13px; font-weight: 600;
@@ -687,7 +680,7 @@
     /* 8. Filter Bar — frosted glass upgrade ─────────────────── */
     .filters-bar {
       position: sticky !important;
-      top: 117px !important;
+      top: 68px !important;
       z-index: 2000 !important;
       background: rgba(13,18,37,0.96) !important;
       backdrop-filter: blur(20px) !important;
@@ -819,7 +812,7 @@
     /* ── Sticky filter bar mobile ── */
     @media (max-width: 640px) {
       #tab-overview > .filters-bar,
-      #tab-map .filters-bar { top: 46px !important; }
+      #tab-map .filters-bar { top: 62px !important; }
     }
 
     /* ── Filter bar mobile ── */
@@ -943,6 +936,44 @@
     .leaflet-popup-content { max-width: 560px !important; }
     .leaflet-popup-content-wrapper { max-width: 580px !important; }
 
+    
+    /* ── Header tabs (embedded in header bar) ── */
+    .header-tabs {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      margin: 0 auto;
+      height: 100%;
+    }
+    .header-tabs .tab-btn {
+      position: relative;
+      padding: 0 22px;
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.55);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: color .2s;
+      display: flex; align-items: center; gap: 6px;
+      white-space: nowrap;
+      border-bottom: 3px solid transparent;
+      letter-spacing: .3px;
+    }
+    .header-tabs .tab-btn:hover { color: rgba(255,255,255,0.85); }
+    .header-tabs .tab-btn.active {
+      color: #fff;
+      border-bottom-color: var(--red);
+    }
+    .header-tabs .tab-btn .tab-icon { font-size: 15px; }
+
+    @media (max-width: 640px) {
+      .header-tabs { margin: 0; gap: 0; order: 3; width: 100%; border-top: 1px solid rgba(255,255,255,0.06); }
+      .header-tabs .tab-btn { padding: 10px 16px; font-size: 12px; flex: 1; justify-content: center; border-bottom: 3px solid transparent; }
+      .header-inner { flex-wrap: wrap; height: auto; padding: 10px 0; }
+    }
+
     </style>
 </head>
 <body>
@@ -961,10 +992,18 @@
       <img src="assets/redbull-logo.jpg" alt="Red Bull" class="rb-logo-img" />
       <div class="logo-divider"></div>
       <div>
-        <h1>VIP Audit Dashboard</h1>
-        <span>Red Bull Egypt Field Compliance</span>
+        <h1>Red Bull Egypt VIP Audit Dashboard</h1>
       </div>
     </div>
+    <!-- Tabs embedded in header -->
+    <nav class="header-tabs" id="tab-nav">
+      <button class="tab-btn active" data-tab="overview" id="btn-tab-overview">
+        <span class="tab-icon">📊</span> Overview
+      </button>
+      <button class="tab-btn" data-tab="map" id="btn-tab-map">
+        <span class="tab-icon">🗺</span> Interactive Map
+      </button>
+    </nav>
     <div class="header-meta">
       <span class="badge badge-red">LIVE DATA</span>
             <span id="last-updated">—</span>
@@ -974,15 +1013,6 @@
   </div>
 </header>
 
-<!-- Tab Navigation -->
-<nav class="tab-nav" id="tab-nav">
-  <button class="tab-btn active" data-tab="overview" id="btn-tab-overview">
-    <span class="tab-icon">📊</span> Overview
-  </button>
-  <button class="tab-btn" data-tab="map" id="btn-tab-map">
-    <span class="tab-icon">🗺</span> Interactive Map
-  </button>
-</nav>
 
 <!-- Main -->
 <main id="app" style="opacity:0">
