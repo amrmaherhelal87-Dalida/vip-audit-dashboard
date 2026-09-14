@@ -297,7 +297,7 @@
     .pill-blue  { background: rgba(59,130,246,.15); color: #93c5fd; }
     .pill-purple{ background: rgba(139,92,246,.15); color: #c4b5fd; }
     .score-bar-wrap { width: 80px; background: rgba(255,255,255,.06); border-radius: 4px; height: 6px; display: inline-block; vertical-align: middle; }
-    .score-bar-fill { height: 100%; border-radius: 4px; transition: width .3s; }
+    .score-bar-fill { display:block; height: 100%; border-radius: 4px; transition: width .3s; }
 
     /* ── FOOTER ── */
     footer {
@@ -1153,22 +1153,13 @@
   <!-- Charts Row 1 -->
   <div class="section-label" style="margin-top:16px">Compliance Overview</div>
   <div class="charts-grid">
-    <!-- Round trend -->
-    <div class="chart-card fade-in">
-      <div class="chart-header">
-        <div>
-          <div class="chart-title">Compliance Trend by Round</div>
-          <div class="chart-subtitle">Average score per audit round (April → July)</div>
-        </div>
-      </div>
-      <div class="chart-wrap"><canvas id="c-trend"></canvas></div>
-    </div>
+    <!-- Compliance Trend merged into Outlet Type chart below -->
     <!-- Outlet type -->
-    <div class="chart-card fade-in" style="animation-delay:.1s">
+    <div class="chart-card chart-wide fade-in" style="animation-delay:.1s">
       <div class="chart-header">
         <div>
-          <div class="chart-title">Compliance by Outlet Type</div>
-          <div class="chart-subtitle">Monthly compliance % per outlet type + overall total</div>
+          <div class="chart-title">Compliance &amp; Trend by Outlet Type</div>
+          <div class="chart-subtitle">Monthly compliance % per outlet type — bars by type, line = overall trend + audit count</div>
         </div>
       </div>
       <div class="chart-wrap" style="height:300px"><canvas id="c-outlet"></canvas></div>
@@ -1258,6 +1249,7 @@
             <label class="ms-opt"><input type="checkbox" value="80" onchange="msOptChange('ms-m-round')"> Round 80 — May</label>
             <label class="ms-opt"><input type="checkbox" value="81" onchange="msOptChange('ms-m-round')"> Round 81 — June</label>
             <label class="ms-opt"><input type="checkbox" value="82" onchange="msOptChange('ms-m-round')"> Round 82 — July</label>
+          <label class="ms-opt"><input type="checkbox" value="83" onchange="msOptChange('ms-m-round')"> Round 83 — August</label>
             <label class="ms-opt"><input type="checkbox" value="83" onchange="msOptChange('ms-m-round')"> Round 83 — August</label>
           </div>
         </div>
@@ -1706,6 +1698,50 @@ function buildOutletChart(data) {
     }
   });
 
+  // Overall line + audit count line (replaces the old Trend by Round chart)
+  const overallData = months.map(m => {
+    const sub = data.filter(r => r.month === m);
+    return sub.length ? +(avgScore(sub)*100).toFixed(1) : null;
+  });
+  const auditCounts = months.map(m => data.filter(r => r.month === m).length);
+
+  datasets.push({
+    label: 'Overall %',
+    type: 'line',
+    data: overallData,
+    borderColor: '#ffffff',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderWidth: 2.5,
+    pointBackgroundColor: '#ffffff',
+    pointRadius: 5,
+    pointHoverRadius: 7,
+    fill: false,
+    tension: 0.35,
+    yAxisID: 'y',
+    datalabels: {
+      display: true, anchor:'end', align:'top',
+      color:'#fff', font:{size:10, weight:'700'},
+      formatter: v => v != null ? v+'%' : ''
+    }
+  });
+
+  datasets.push({
+    label: 'Audit Count',
+    type: 'line',
+    data: auditCounts,
+    borderColor: '#f5c518',
+    backgroundColor: 'rgba(245,197,24,0.1)',
+    borderWidth: 2,
+    borderDash: [5, 4],
+    pointBackgroundColor: '#f5c518',
+    pointRadius: 4,
+    pointHoverRadius: 6,
+    fill: false,
+    tension: 0.35,
+    yAxisID: 'y2',
+    datalabels: { display: false }
+  });
+
   charts['c-outlet'] = new Chart(ctx('c-outlet'), {
     type: 'bar',
     data: { labels: months, datasets },
@@ -1714,9 +1750,15 @@ function buildOutletChart(data) {
       scales: {
         x: { grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'#94a3b8'} },
         y: {
-          min:0, max:100,
+          min:0, max:100, position:'left',
           grid:{color:'rgba(255,255,255,0.05)'},
           ticks:{color:'#94a3b8', callback:v=>v+'%'}
+        },
+        y2: {
+          position:'right',
+          grid:{display:false},
+          ticks:{color:'#f5c518'},
+          title:{display:true, text:'Audit Count', color:'#f5c518', font:{size:10}}
         }
       },
       plugins: {
@@ -1726,7 +1768,10 @@ function buildOutletChart(data) {
         },
         tooltip:{
           callbacks:{
-            label: c => ' ' + c.dataset.label + ': ' + (c.parsed.y != null ? c.parsed.y.toFixed(1)+'%' : 'N/A')
+            label: c => {
+              if (c.dataset.yAxisID === 'y2') return ' Audit Count: ' + c.parsed.y.toLocaleString();
+              return ' ' + c.dataset.label + ': ' + (c.parsed.y != null ? c.parsed.y.toFixed(1)+'%' : 'N/A');
+            }
           }
         }
       }
@@ -1939,6 +1984,7 @@ function renderTable(data) {
       {label:'Avail',  key:'avail_compliance'},
       {label:'SoS',    key:'sos_compliance'},
       {label:'SZ',     key:'sz_compliance'},
+      {label:'Price',  key:'price_compliance'},
       {label:'L.Cooler',key:'large_cooler_compliance'},
     ],
     'Supermarket': [
@@ -2273,6 +2319,7 @@ const KPI_BY_CONTRACT = {
     { label: 'Availability',   comp: 'avail_compliance',           inc: 'avail_incentive' },
     { label: 'Share of Shelf', comp: 'sos_compliance',             inc: 'sos_incentive' },
     { label: 'Strike Zone',    comp: 'sz_compliance',              inc: 'sz_incentive' },
+    { label: 'Price',          comp: 'price_compliance',           inc: 'price_incentive' },
     { label: 'Large Cooler',   comp: 'large_cooler_compliance',    inc: 'large_cooler_incentive' },
   ],
   'Supermarket': [
@@ -2648,7 +2695,8 @@ function updateMap() {
   const POPUP_KPIS = {
     'Impulse & Grocery': [
       {l:'Avail',k:'avail_compliance'},{l:'SoS',k:'sos_compliance'},
-      {l:'Strike',k:'sz_compliance'},{l:'L.Cooler',k:'large_cooler_compliance'},
+      {l:'Strike',k:'sz_compliance'},{l:'Price',k:'price_compliance'},
+      {l:'L.Cooler',k:'large_cooler_compliance'},
     ],
     'Supermarket': [
       {l:'Avail',k:'avail_compliance'},{l:'SoS',k:'sos_compliance'},

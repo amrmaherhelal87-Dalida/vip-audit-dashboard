@@ -1,13 +1,13 @@
 {
-  "total_audits": 5814,
-  "avg_score": 0.5971,
-  "total_incentive": 29521.0,
-  "avail_compliant": 2962,
+  "total_audits": 7347,
+  "avg_score": 0.5909,
+  "total_incentive": 37217.0,
+  "avail_compliant": 3678,
   "outlet_counts": {
-    "Impulse & Grocery": 4360,
-    "Supermarket": 519,
-    "Gas Station": 905,
-    "Bazar": 30
+    "Impulse & Grocery": 5509,
+    "Supermarket": 664,
+    "Gas Station": 1137,
+    "Bazar": 37
   },
   "round_stats": {
     "80": {
@@ -33,58 +33,54 @@
       "score_sum": 864.1666666666694,
       "incentive_sum": 6204.0,
       "avail_sum": 747
+    },
+    "83": {
+      "count": 1533,
+      "score_sum": 869.8142857142875,
+      "incentive_sum": 7696.0,
+      "avail_sum": 716
     }
   },
   "region_stats": {
     "Giza": {
-      "count": 992,
-      "score_sum": 577.2952380952387,
-      "incentive_sum": 4624.5
+      "count": 1258,
+      "score_sum": 714.485714285717,
+      "incentive_sum": 5611.0
     },
     "Alexandria": {
-      "count": 1077,
-      "score_sum": 620.3214285714306,
-      "incentive_sum": 4073.5
+      "count": 1323,
+      "score_sum": 752.4833333333371,
+      "incentive_sum": 4893.5
     },
     "Delta": {
-      "count": 1512,
-      "score_sum": 1046.1714285714334,
-      "incentive_sum": 11199.0
+      "count": 1901,
+      "score_sum": 1342.9095238095254,
+      "incentive_sum": 14875.5
     },
     "Canal": {
-      "count": 520,
-      "score_sum": 299.7428571428572,
-      "incentive_sum": 2171.5
-    },
-    "Ismailia": {
-      "count": 19,
-      "score_sum": 8.8,
-      "incentive_sum": 10
+      "count": 713,
+      "score_sum": 403.11428571428564,
+      "incentive_sum": 2920.5
     },
     "Sinai": {
-      "count": 285,
-      "score_sum": 158.96190476190463,
-      "incentive_sum": 1232.5
+      "count": 362,
+      "score_sum": 189.80952380952354,
+      "incentive_sum": 1409.5
     },
     "Red Sea": {
-      "count": 263,
-      "score_sum": 140.257142857143,
-      "incentive_sum": 1034.0
+      "count": 327,
+      "score_sum": 165.7095238095239,
+      "incentive_sum": 1124.0
     },
     "Cairo": {
-      "count": 1106,
-      "score_sum": 607.3333333333335,
-      "incentive_sum": 5090.0
-    },
-    "Port Said": {
-      "count": 2,
-      "score_sum": 0.6000000000000001,
-      "incentive_sum": 0
+      "count": 1415,
+      "score_sum": 758.2857142857168,
+      "incentive_sum": 6265.0
     },
     "Upper Egypt": {
-      "count": 38,
-      "score_sum": 11.833333333333332,
-      "incentive_sum": 86
+      "count": 48,
+      "score_sum": 14.333333333333334,
+      "incentive_sum": 118
     }
   }
 }
