@@ -1098,7 +1098,7 @@
   </div>
 
   <!-- KPI Cards -->
-  <div class="section-label">Key Performance Indicators</div>
+  <div class="section-label">Key Performance Indicators <span id="kpi-filter-badge" style="display:none;margin-left:8px;font-size:11px;font-weight:600;color:#fff;background:var(--red);padding:2px 10px;border-radius:12px;vertical-align:middle"></span></div>
   <div class="kpi-grid">
     <div class="kpi-card red fade-in">
       <div class="kpi-icon">📋</div>
@@ -1548,19 +1548,27 @@ function applyFilters(data) {
 /* ═══════════════════════════════════════════════
    KPI CARDS
 ═══════════════════════════════════════════════ */
-function updateKPIs(data) {
+function updateKPIs(data, label) {
   const total = data.length;
   const scores = data.map(r => r.overall_score).filter(v => typeof v === 'number');
   const avg = scores.length ? scores.reduce((a,b)=>a+b,0)/scores.length : 0;
   const incentiveTotal = data.reduce((s,r) => s + (typeof r.total_incentive === 'number' ? r.total_incentive : 0), 0);
   const availC = data.filter(r => r.avail_compliance === 1).length;
+  const tag = label ? ` · ${label}` : '';
 
   document.getElementById('k-total').textContent     = total.toLocaleString();
+  document.getElementById('k-rounds-sub').textContent = label ? label : 'Across all rounds';
   document.getElementById('k-score').textContent     = (avg*100).toFixed(1) + '%';
-  document.getElementById('k-score-sub').textContent = `From ${scores.length.toLocaleString()} scored audits`;
+  document.getElementById('k-score-sub').textContent = `From ${scores.length.toLocaleString()} scored audits${tag}`;
   document.getElementById('k-incentive').textContent = incentiveTotal.toLocaleString(undefined,{maximumFractionDigits:0}) + ' EGP';
   document.getElementById('k-avail').textContent     = total ? ((availC/total)*100).toFixed(1)+'%' : '—';
-  document.getElementById('k-avail-sub').textContent = `${availC.toLocaleString()} of ${total.toLocaleString()} outlets fully stocked`;
+  document.getElementById('k-avail-sub').textContent = `${availC.toLocaleString()} of ${total.toLocaleString()} outlets fully stocked${tag}`;
+  // Show / hide filter badge
+  const badge = document.getElementById('kpi-filter-badge');
+  if (badge) {
+    if (label) { badge.textContent = label; badge.style.display = 'inline'; }
+    else        { badge.style.display = 'none'; }
+  }
 }
 
 /* ═══════════════════════════════════════════════
@@ -2523,14 +2531,29 @@ function buildKPIContractTrendChart(data) {
 // and the month-by-month trend chart below it.
 document.querySelectorAll('[data-contract-tab]').forEach(btn => {
   btn.addEventListener('click', () => {
+    const wasActive = btn.classList.contains('active');
     document.querySelectorAll('[data-contract-tab]').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    activeContractType = btn.dataset.contractTab;
     const filtered = applyFilters(ALL_DATA);
-    buildKPIContractChart(filtered);
-    buildKPIContractTrendChart(filtered);
+
+    if (wasActive) {
+      // Clicking active tab again → reset to All
+      activeContractType = 'Impulse & Grocery';
+      btn.classList.add('active');
+      updateKPIs(filtered);
+      buildKPIContractChart(filtered);
+      buildKPIContractTrendChart(filtered);
+    } else {
+      btn.classList.add('active');
+      activeContractType = btn.dataset.contractTab;
+      const typeFiltered = filtered.filter(r => r.outlet_type === activeContractType);
+      // Update KPI cards for this contract type
+      updateKPIs(typeFiltered, activeContractType);
+      buildKPIContractChart(filtered);
+      buildKPIContractTrendChart(filtered);
+    }
   });
 });
+
 
 </script>
 
