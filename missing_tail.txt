@@ -1,0 +1,216 @@
+﻿    batch.push(L.marker([lat,lon],{icon:makeCircle(color,radius)}).bindPopup(popup,{maxWidth:260,closeButton:false}));
+  });
+
+  markerCluster.addLayers(batch);
+
+  // Stats
+  document.getElementById('map-count').textContent = data.length.toLocaleString();
+  const sc = data.map(r=>r.overall_score).filter(v=>typeof v==='number');
+  document.getElementById('map-avg').textContent = sc.length ? (sc.reduce((a,b)=>a+b,0)/sc.length*100).toFixed(1)+'%' : 'ظ¤';
+  document.getElementById('map-incentive').textContent = data.reduce((s,r)=>s+(typeof r.total_incentive==='number'?r.total_incentive:0),0).toLocaleString(undefined,{maximumFractionDigits:0});
+
+  if (batch.length && markerCluster.getBounds().isValid())
+    leafletMap.fitBounds(markerCluster.getBounds(), {padding:[40,40], maxZoom:12});
+}
+
+// NOTE: 'm-round' and 'm-type' are NOT plain <select> elements ظ¤ they're the
+// custom multi-select widgets (ms-m-round / ms-m-type), already wired via
+// msOptChange()/msAllToggle() below. Only m-compliance/m-color are real
+// <select> elements, so only they get a plain 'change' listener here.
+['m-compliance','m-color'].forEach(id =>
+  document.getElementById(id).addEventListener('change', () => { if(mapInitialised) updateMap(); })
+);
+document.getElementById('btn-map-reset').addEventListener('click', () => {
+  ['m-compliance'].forEach(id => document.getElementById(id).value='all');
+  document.getElementById('m-color').value = 'type';
+  // Reset the two multi-select widgets back to "All"
+  ['ms-m-round','ms-m-type'].forEach(id => {
+    const allCb = document.querySelector(`#${id} .all-opt input`);
+    if (allCb) {
+      document.querySelectorAll(`#${id} .ms-opt:not(.all-opt) input`).forEach(c => c.checked = false);
+      allCb.checked = true;
+      updateMSLabel(id);
+    }
+  });
+  document.getElementById('m-search').value = '';
+  if (mapInitialised) updateMap();
+});
+
+/* ظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـ
+   OUTLET SEARCH ظ¤ instant filtering via oninput on the input
+   itself (same pattern as the Interactive Map's #m-search).
+ظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـ */
+document.getElementById('outlet-search-clear').addEventListener('click', function() {
+  document.getElementById('outlet-search').value = '';
+  renderTable(applyFilters(ALL_DATA));
+});
+
+/* ظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـ
+   QUARTER TAB
+ظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـظـ */
+
+
+
+
+// ظ¤ظ¤ Quarter main tab: build on first visit ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤
+let quarterBuilt   = false;
+let activeQFilter  = 'all';
+
+document.getElementById('btn-tab-quarter')?.addEventListener('click', () => {
+  if (!quarterBuilt) {
+    buildQuarterTab(ALL_DATA, activeQFilter);
+    quarterBuilt = true;
+  }
+
+});
+
+
+
+
+
+
+/* ظ¤ظ¤ Multi-Select widget helpers ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ */
+function toggleMS(id) {
+  const wrap = document.getElementById(id);
+  const isOpen = wrap.classList.contains('open');
+  // Close all other open multi-selects
+  document.querySelectorAll('.ms-wrap.open').forEach(w => w.classList.remove('open'));
+  if (!isOpen) wrap.classList.add('open');
+}
+
+function updateMSLabel(id) {
+  const allCb  = document.querySelector(`#${id} .all-opt input`);
+  const opts   = [...document.querySelectorAll(`#${id} .ms-opt:not(.all-opt) input:checked`)];
+  const lbl    = document.getElementById(`${id}-lbl`);
+  const defaults = {
+    'ms-round':'All Rounds','ms-type':'All Types','ms-region':'All Regions',
+    'ms-m-round':'All Rounds','ms-m-type':'All Types'
+  };
+  if (!lbl) return;
+  if (allCb?.checked || opts.length === 0) {
+    lbl.innerHTML = defaults[id] || 'All';
+  } else if (opts.length <= 2) {
+    lbl.innerHTML = opts.map(c => c.parentElement.textContent.trim()).join(', ');
+  } else {
+    lbl.innerHTML = `${opts.length} selected <span class="ms-badge">${opts.length}</span>`;
+  }
+}
+
+function msAllToggle(id, cb) {
+  if (cb.checked) {
+    document.querySelectorAll(`#${id} .ms-opt:not(.all-opt) input`).forEach(c => c.checked = false);
+  }
+  updateMSLabel(id);
+  if (id === 'ms-m-round' || id === 'ms-m-type') {
+    updateMap();
+  } else {
+    render();
+  }
+}
+
+function msOptChange(id) {
+  const allCb  = document.querySelector(`#${id} .all-opt input`);
+  const anyChecked = [...document.querySelectorAll(`#${id} .ms-opt:not(.all-opt) input:checked`)].length > 0;
+  if (allCb) allCb.checked = !anyChecked;
+  updateMSLabel(id);
+  // Route to correct handler based on which ms-wrap changed
+  if (id === 'ms-m-round' || id === 'ms-m-type') {
+    updateMap();
+  } else {
+    render();
+  }
+}
+
+// Close multi-selects when clicking outside
+document.addEventListener('click', e => {
+  if (!e.target.closest('.ms-wrap')) {
+    document.querySelectorAll('.ms-wrap.open').forEach(w => w.classList.remove('open'));
+  }
+});
+
+
+/* ظ¤ظ¤ Export Functions ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ظ¤ */
+function toggleExportMenu() {
+  const wrap = document.getElementById('export-wrap');
+  wrap.classList.toggle('open');
+}
+
+// Close export menu on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('#export-wrap')) {
+    document.getElementById('export-wrap')?.classList.remove('open');
+  }
+});
+
+function getExportData() {
+  // Use currently filtered data
+  const data = applyFilters(ALL_DATA);
+  return data.map((r, i) => ({
+    '#':              i + 1,
+    'Round':          r.round || '',
+    'Month':          r.month || '',
+    'Outlet Code':    r.outlet_code || '',
+    'Outlet Name':    r.outlet_name || '',
+    'Outlet Type':    r.outlet_type || '',
+    'Region':         r.region || '',
+    'Governorate':    r.governorate || '',
+    'Overall Score':  typeof r.overall_score === 'number' ? +(r.overall_score * 100).toFixed(1) : '',
+    'Avail. %':       r.avail_compliance === 1 ? 100 : r.avail_compliance === 0 ? 0 : '',
+    'SoS %':          r.sos_compliance   === 1 ? 100 : r.sos_compliance   === 0 ? 0 : '',
+    'Strike Zone %':  r.sz_compliance    === 1 ? 100 : r.sz_compliance    === 0 ? 0 : '',
+    'Price %':        r.price_compliance === 1 ? 100 : r.price_compliance === 0 ? 0 : '',
+    'Sticky Shelf %': r.sticky_compliance=== 1 ? 100 : r.sticky_compliance=== 0 ? 0 : '',
+    'Ambient %':      r.ambient_compliance===1 ? 100 : r.ambient_compliance===0 ? 0 : '',
+    'Cooler@Cashier %': r.cooler_cashier_compliance===1?100:r.cooler_cashier_compliance===0?0:'',
+    'Chilled Cashier %':r.chilled_cashier_compliance===1?100:r.chilled_cashier_compliance===0?0:'',
+    'Outdoor %':      r.outdoor_compliance===1?100:r.outdoor_compliance===0?0:'',
+    'Brand Vis. %':   r.posm_compliance===1?100:r.posm_compliance===0?0:'',
+    'Large Cooler %': r.large_cooler_compliance===1?100:r.large_cooler_compliance===0?0:'',
+    'Cooler Visible %':r.cooler_visible_compliance===1?100:r.cooler_visible_compliance===0?0:'',
+    'Total Incentive (EGP)': typeof r.total_incentive === 'number' ? +r.total_incentive.toFixed(2) : '',
+  }));
+}
+
+function exportData(type) {
+  document.getElementById('export-wrap').classList.remove('open');
+  const rows = getExportData();
+  if (!rows.length) { alert('No data to export with current filters.'); return; }
+
+  const now = new Date();
+  const stamp = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+  const filename = `VIP_Audit_${stamp}`;
+
+  if (type === 'csv') {
+    const headers = Object.keys(rows[0]);
+    const csv = [
+      headers.join(','),
+      ...rows.map(r => headers.map(h => {
+        const v = r[h] ?? '';
+        return typeof v === 'string' && (v.includes(',') || v.includes('"'))
+          ? `"${v.replace(/"/g, '""')}"` : v;
+      }).join(','))
+    ].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename + '.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+
+  } else if (type === 'excel') {
+    if (typeof XLSX === 'undefined') { alert('Excel library loadingظخ try again in a moment.'); return; }
+    const ws = XLSX.utils.json_to_sheet(rows);
+    // Style header row width
+    const cols = Object.keys(rows[0]).map(k => ({ wch: Math.max(k.length, 12) }));
+    ws['!cols'] = cols;
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'VIP Audit Data');
+    XLSX.writeFile(wb, filename + '.xlsx');
+  }
+}
+
+
+
+</script>
+</body>
+</html>

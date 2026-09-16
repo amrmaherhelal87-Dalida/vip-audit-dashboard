@@ -986,6 +986,74 @@
       .header-inner { flex-wrap: wrap; height: auto; padding: 10px 0; }
     }
 
+    /* ── Sort panel (Outlet Detail table) ── */
+    .sort-wrap { position: relative; display: inline-block; }
+    .sort-btn {
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 12.5px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: border-color .15s, background .15s;
+    }
+    .sort-btn:hover, .sort-wrap.open .sort-btn { border-color: rgba(232,0,28,.5); background: var(--surface2); }
+    .sort-panel {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      z-index: 3000;
+      width: 260px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      box-shadow: 0 12px 32px rgba(0,0,0,.45);
+    }
+    .sort-wrap.open .sort-panel { display: block; }
+    .sort-panel-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .sort-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+    .sort-row label { font-size: 10.5px; color: var(--muted); font-weight: 600; }
+    .sort-row-fields { display: flex; gap: 6px; }
+    .sort-row select {
+      flex: 1;
+      min-width: 0;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 12px;
+      outline: none;
+    }
+    .sort-row select:focus { border-color: rgba(232,0,28,.5); }
+    .sort-actions { display: flex; justify-content: space-between; gap: 8px; margin-top: 4px; }
+    .sort-actions button {
+      flex: 1;
+      padding: 7px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .sort-reset-btn { background: var(--surface2); color: var(--muted); }
+    .sort-reset-btn:hover { color: var(--text); }
+    .sort-apply-btn { background: var(--red); color: #fff; border-color: var(--red); }
+    .sort-apply-btn:hover { background: #ff1a35; }
     </style>
 </head>
 <body>
@@ -1213,6 +1281,82 @@
         <div class="chart-subtitle" id="table-count">Showing — records</div>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
+        <div class="sort-wrap" id="table-sort-wrap">
+          <button class="sort-btn" id="table-sort-btn" onclick="toggleSortPanel()" title="Sort options">
+            <span>⇅ Sort</span>
+          </button>
+          <div class="sort-panel" id="table-sort-panel">
+            <div class="sort-panel-title">Sort Records</div>
+
+            <div class="sort-row">
+              <label>Sort by</label>
+              <div class="sort-row-fields">
+                <select id="sort-field-1">
+                  <option value="">— None —</option>
+                  <option value="outlet_type">Type</option>
+                  <option value="region">Region</option>
+                  <option value="governorate">Governorate</option>
+                  <option value="round">Round</option>
+                  <option value="outlet_code">Code</option>
+                  <option value="outlet_name">Name</option>
+                  <option value="overall_score">Score</option>
+                  <option value="total_incentive">Incentive</option>
+                </select>
+                <select id="sort-dir-1">
+                  <option value="asc">Asc</option>
+                  <option value="desc">Desc</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="sort-row">
+              <label>Then by</label>
+              <div class="sort-row-fields">
+                <select id="sort-field-2">
+                  <option value="">— None —</option>
+                  <option value="outlet_type">Type</option>
+                  <option value="region">Region</option>
+                  <option value="governorate">Governorate</option>
+                  <option value="round">Round</option>
+                  <option value="outlet_code">Code</option>
+                  <option value="outlet_name">Name</option>
+                  <option value="overall_score">Score</option>
+                  <option value="total_incentive">Incentive</option>
+                </select>
+                <select id="sort-dir-2">
+                  <option value="asc">Asc</option>
+                  <option value="desc">Desc</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="sort-row">
+              <label>Then by</label>
+              <div class="sort-row-fields">
+                <select id="sort-field-3">
+                  <option value="">— None —</option>
+                  <option value="outlet_type">Type</option>
+                  <option value="region">Region</option>
+                  <option value="governorate">Governorate</option>
+                  <option value="round">Round</option>
+                  <option value="outlet_code">Code</option>
+                  <option value="outlet_name">Name</option>
+                  <option value="overall_score">Score</option>
+                  <option value="total_incentive">Incentive</option>
+                </select>
+                <select id="sort-dir-3">
+                  <option value="asc">Asc</option>
+                  <option value="desc">Desc</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="sort-actions">
+              <button class="sort-reset-btn" onclick="resetSort()">Reset</button>
+              <button class="sort-apply-btn" onclick="applySortFromPanel()">Apply</button>
+            </div>
+          </div>
+        </div>
         <input type="text" id="outlet-search"
           placeholder="🔍  Search by code or name…"
           oninput="renderTable(applyFilters(ALL_DATA))">
@@ -1967,7 +2111,85 @@ function buildAvailChart(data) {
 /* ═══════════════════════════════════════════════
    TABLE
 ═══════════════════════════════════════════════ */
-let sortCol = 'serial', sortAsc = true;
+let sortRules = []; // [{col, dir}], applied in order — first rule is primary
+
+const SORT_COL_LABELS = {
+  serial: '#', round: 'Round', outlet_code: 'Code', outlet_name: 'Name',
+  outlet_type: 'Type', region: 'Region', governorate: 'Governorate',
+  overall_score: 'Score', total_incentive: 'Incentive'
+};
+
+function compareVals(av, bv) {
+  const aEmpty = av === null || av === undefined || av === '';
+  const bEmpty = bv === null || bv === undefined || bv === '';
+  if (aEmpty) return bEmpty ? 0 : 1;
+  if (bEmpty) return -1;
+  if (typeof av === 'number' && typeof bv === 'number') return av - bv;
+  return String(av).localeCompare(String(bv), undefined, { numeric: true, sensitivity: 'base' });
+}
+
+function applySortRules(data) {
+  if (!sortRules.length) return data;
+  const rows = data.slice();
+  rows.sort((a, b) => {
+    for (const rule of sortRules) {
+      const cmp = compareVals(a[rule.col], b[rule.col]);
+      if (cmp !== 0) return rule.dir === 'desc' ? -cmp : cmp;
+    }
+    return 0;
+  });
+  return rows;
+}
+
+function updateSortIndicators() {
+  document.querySelectorAll('#data-table thead th[data-col]').forEach(th => {
+    const col = th.dataset.col;
+    let label = SORT_COL_LABELS[col] || col;
+    const rank = sortRules.findIndex(r => r.col === col);
+    if (rank !== -1) {
+      const arrow = sortRules[rank].dir === 'desc' ? '▼' : '▲';
+      label += ' ' + arrow + (sortRules.length > 1 ? String(rank + 1) : '');
+    }
+    th.textContent = label;
+  });
+}
+
+function toggleSortPanel() {
+  document.getElementById('table-sort-wrap').classList.toggle('open');
+}
+
+function syncSortPanelFromRules() {
+  for (let i = 0; i < 3; i++) {
+    const rule = sortRules[i];
+    const fieldSel = document.getElementById('sort-field-' + (i + 1));
+    const dirSel   = document.getElementById('sort-dir-' + (i + 1));
+    if (!fieldSel || !dirSel) continue;
+    fieldSel.value = rule ? rule.col : '';
+    dirSel.value   = rule ? rule.dir : 'asc';
+  }
+}
+
+function applySortFromPanel() {
+  const rules = [];
+  for (let i = 1; i <= 3; i++) {
+    const col = document.getElementById('sort-field-' + i)?.value;
+    const dir = document.getElementById('sort-dir-' + i)?.value || 'asc';
+    if (col) rules.push({ col, dir });
+  }
+  sortRules = rules;
+  updateSortIndicators();
+  document.getElementById('table-sort-wrap').classList.remove('open');
+  renderTable(applyFilters(ALL_DATA));
+}
+
+function resetSort() {
+  sortRules = [];
+  syncSortPanelFromRules();
+  updateSortIndicators();
+  document.getElementById('table-sort-wrap').classList.remove('open');
+  renderTable(applyFilters(ALL_DATA));
+}
+
 function outletPill(type) {
   const cls = { 'Impulse & Grocery':'pill-red','Gas Station':'pill-blue','Supermarket':'pill-gold','Bazar':'pill-purple' };
   return `<span class="pill ${cls[type]||'pill-blue'}">${type||'—'}</span>`;
@@ -1999,6 +2221,7 @@ function renderTable(data) {
         return searchTerms.every(term => haystack.includes(term));
       })
     : data;
+  filtered = applySortRules(filtered);
   const show = filtered.slice(0, 200);
   document.getElementById('table-count').textContent = `Showing ${show.length.toLocaleString()} of ${filtered.length.toLocaleString()} records${searchQ ? ' (filtered)' : ''}`;
   // KPI map per outlet type (same as KPI_BY_CONTRACT)
@@ -2065,20 +2288,18 @@ function renderTable(data) {
 /* ═══════════════════════════════════════════════
    SORT HEADER
 ═══════════════════════════════════════════════ */
-document.querySelectorAll('#data-table thead th').forEach(th => {
+document.querySelectorAll('#data-table thead th[data-col]').forEach(th => {
   th.addEventListener('click', () => {
     const col = th.dataset.col;
-    if (sortCol === col) sortAsc = !sortAsc; else { sortCol = col; sortAsc = true; }
-    const filtered = applyFilters(ALL_DATA);
-    filtered.sort((a,b) => {
-      const av = a[col], bv = b[col];
-      if (av === null || av === undefined) return 1;
-      if (bv === null || bv === undefined) return -1;
-      return sortAsc ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
-    });
-    renderTable(filtered);
+    const current = sortRules[0];
+    const dir = (current && current.col === col && current.dir === 'asc') ? 'desc' : 'asc';
+    sortRules = [{ col, dir }];
+    syncSortPanelFromRules();
+    updateSortIndicators();
+    renderTable(applyFilters(ALL_DATA));
   });
 });
+updateSortIndicators();
 
 /* ═══════════════════════════════════════════════
    FULL RENDER
@@ -2927,10 +3148,13 @@ function msOptChange(id) {
   }
 }
 
-// Close multi-selects when clicking outside
+// Close multi-selects and the sort panel when clicking outside
 document.addEventListener('click', e => {
   if (!e.target.closest('.ms-wrap')) {
     document.querySelectorAll('.ms-wrap.open').forEach(w => w.classList.remove('open'));
+  }
+  if (!e.target.closest('.sort-wrap')) {
+    document.querySelectorAll('.sort-wrap.open').forEach(w => w.classList.remove('open'));
   }
 });
 

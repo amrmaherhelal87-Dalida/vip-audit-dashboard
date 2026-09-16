@@ -1,0 +1,96 @@
+{
+  "total_audits": 7347,
+  "avg_score": 0.5785,
+  "total_incentive": 41204.0,
+  "avail_compliant": 3678,
+  "outlet_counts": {
+    "Supermarket": 664,
+    "Impulse & Grocery": 5509,
+    "Gas Station": 1137,
+    "Bazar": 37
+  },
+  "round_stats": {
+    "79": {
+      "count": 1450,
+      "score_sum": 858.3095238095239,
+      "incentive_sum": 8810.0,
+      "avail_sum": 714
+    },
+    "80": {
+      "count": 1413,
+      "score_sum": 835.0,
+      "incentive_sum": 8249.0,
+      "avail_sum": 823
+    },
+    "81": {
+      "count": 1497,
+      "score_sum": 822.9404761904763,
+      "incentive_sum": 7935.0,
+      "avail_sum": 678
+    },
+    "82": {
+      "count": 1454,
+      "score_sum": 864.1666666666666,
+      "incentive_sum": 8514.0,
+      "avail_sum": 747
+    },
+    "83": {
+      "count": 1533,
+      "score_sum": 869.8142857142857,
+      "incentive_sum": 7696.0,
+      "avail_sum": 716
+    }
+  },
+  "region_stats": {
+    "Alexandria": {
+      "count": 1322,
+      "score_sum": 728.3047619047619,
+      "incentive_sum": 5302.5
+    },
+    "Cairo": {
+      "count": 1413,
+      "score_sum": 742.7,
+      "incentive_sum": 7214.5
+    },
+    "Canal": {
+      "count": 661,
+      "score_sum": 359.0571428571429,
+      "incentive_sum": 3246.0
+    },
+    "Delta": {
+      "count": 1917,
+      "score_sum": 1322.1166666666666,
+      "incentive_sum": 15586.0
+    },
+    "Giza": {
+      "count": 1262,
+      "score_sum": 699.4499999999999,
+      "incentive_sum": 6299.5
+    },
+    "Ismailia": {
+      "count": 32,
+      "score_sum": 16.05,
+      "incentive_sum": 60
+    },
+    "Port Said": {
+      "count": 3,
+      "score_sum": 0.95,
+      "incentive_sum": 0
+    },
+    "Red Sea": {
+      "count": 327,
+      "score_sum": 173.8095238095238,
+      "incentive_sum": 1625.0
+    },
+    "Sinai": {
+      "count": 362,
+      "score_sum": 193.4595238095238,
+      "incentive_sum": 1742.5
+    },
+    "Upper Egypt": {
+      "count": 48,
+      "score_sum": 14.333333333333332,
+      "incentive_sum": 128
+    }
+  }
+}
