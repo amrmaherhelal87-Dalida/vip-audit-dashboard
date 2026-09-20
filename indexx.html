@@ -1054,6 +1054,35 @@
     .sort-reset-btn:hover { color: var(--text); }
     .sort-apply-btn { background: var(--red); color: #fff; border-color: var(--red); }
     .sort-apply-btn:hover { background: #ff1a35; }
+    /* ── Table pagination ── */
+    .table-pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+    .page-btn {
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 12.5px;
+      font-weight: 600;
+      transition: border-color .15s, background .15s, opacity .15s;
+    }
+    .page-btn:hover:not(:disabled) { border-color: rgba(232,0,28,.5); background: var(--surface2); }
+    .page-btn:disabled { opacity: .35; cursor: not-allowed; }
+    .page-info {
+      font-size: 12.5px;
+      color: var(--muted);
+      font-weight: 600;
+      min-width: 110px;
+      text-align: center;
+    }
     </style>
 </head>
 <body>
@@ -1382,6 +1411,13 @@
         </thead>
         <tbody id="table-body"></tbody>
       </table>
+    </div>
+    <div class="table-pagination" id="table-pagination">
+      <button class="page-btn" id="page-first" onclick="goToTablePage(1)" title="First page">« First</button>
+      <button class="page-btn" id="page-prev" onclick="goToTablePage(tablePage-1)" title="Previous page">‹ Prev</button>
+      <span class="page-info" id="page-info">Page 1 of 1</span>
+      <button class="page-btn" id="page-next" onclick="goToTablePage(tablePage+1)" title="Next page">Next ›</button>
+      <button class="page-btn" id="page-last" onclick="goToTablePage(totalTablePages)" title="Last page">Last »</button>
     </div>
   </div>
 
@@ -2207,7 +2243,34 @@ function scoreFill(v) {
   <span class="score-bar-wrap"><span class="score-bar-fill" style="width:${pct}%;background:${col}"></span></span>`;
 }
 
-function renderTable(data) {
+let tablePage = 1;
+let totalTablePages = 1;
+const TABLE_PAGE_SIZE = 200;
+
+function goToTablePage(p) {
+  p = Math.max(1, Math.min(p, totalTablePages));
+  tablePage = p;
+  renderTable(applyFilters(ALL_DATA), { keepPage: true });
+}
+
+function updateTablePaginationUI() {
+  const info = document.getElementById('page-info');
+  if (info) info.textContent = `Page ${tablePage} of ${totalTablePages}`;
+  const first = document.getElementById('page-first');
+  const prev  = document.getElementById('page-prev');
+  const next  = document.getElementById('page-next');
+  const last  = document.getElementById('page-last');
+  const atStart = tablePage <= 1;
+  const atEnd   = tablePage >= totalTablePages;
+  if (first) first.disabled = atStart;
+  if (prev)  prev.disabled  = atStart;
+  if (next)  next.disabled  = atEnd;
+  if (last)  last.disabled  = atEnd;
+}
+
+function renderTable(data, opts) {
+  opts = opts || {};
+  if (!opts.keepPage) tablePage = 1;
   const tbody = document.getElementById('table-body');
   // Apply outlet search filter — matches code, name, type, region or
   // governorate; multi-word queries require every word to match somewhere.
@@ -2222,8 +2285,17 @@ function renderTable(data) {
       })
     : data;
   filtered = applySortRules(filtered);
-  const show = filtered.slice(0, 200);
-  document.getElementById('table-count').textContent = `Showing ${show.length.toLocaleString()} of ${filtered.length.toLocaleString()} records${searchQ ? ' (filtered)' : ''}`;
+
+  const total = filtered.length;
+  totalTablePages = Math.max(1, Math.ceil(total / TABLE_PAGE_SIZE));
+  if (tablePage > totalTablePages) tablePage = totalTablePages;
+  if (tablePage < 1) tablePage = 1;
+  const startIdx = (tablePage - 1) * TABLE_PAGE_SIZE;
+  const show = filtered.slice(startIdx, startIdx + TABLE_PAGE_SIZE);
+  const rangeStart = total === 0 ? 0 : startIdx + 1;
+  const rangeEnd = startIdx + show.length;
+  document.getElementById('table-count').textContent = `Showing ${rangeStart.toLocaleString()}–${rangeEnd.toLocaleString()} of ${total.toLocaleString()} records${searchQ ? ' (filtered)' : ''}`;
+  updateTablePaginationUI();
   // KPI map per outlet type (same as KPI_BY_CONTRACT)
   const OUTLET_KPIS = {
     'Impulse & Grocery': [
