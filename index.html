@@ -67,8 +67,6 @@
       display: flex;
       align-items: center;
       gap: 16px;
-      min-width: 0;       /* allow this group to shrink so the title can truncate */
-      flex-shrink: 1;
     }
     .rb-logo-img {
       height: 48px;
@@ -85,16 +83,9 @@
     .logo-area h1 {
       font-size: 17px; font-weight: 700; color: var(--text);
       line-height: 1.2;
-      white-space: nowrap;      /* never wrap to a 2nd line — it breaks the fixed-height header */
-      overflow: hidden;
-      text-overflow: ellipsis;
-      min-width: 0;
     }
     .logo-area span {
       font-size: 12px; color: var(--muted); font-weight: 400;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
     .adhoc-logo-img {
       height: 32px;
@@ -106,15 +97,6 @@
     .header-meta {
       display: flex; gap: 10px; align-items: center;
       flex-wrap: wrap;
-      flex-shrink: 0;
-    }
-    .header-tabs { flex-shrink: 0; }
-    /* Medium widths (tablets, landscape phones): the row gets tight before
-       it's narrow enough to hit the 640px mobile layout — drop the least
-       essential branding first so the title doesn't have to truncate. */
-    @media (max-width: 1024px) and (min-width: 641px) {
-      .adhoc-logo-img { display: none; }
-      .logo-area h1 { max-width: 240px; }
     }
     .badge {
       padding: 4px 12px; border-radius: 20px;
