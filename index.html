@@ -1083,6 +1083,33 @@
       min-width: 110px;
       text-align: center;
     }
+    
+    /* ── Table Refine Panel ── */
+    #refine-wrapper { position: relative; }
+    #refine-toggle {
+      padding: 6px 11px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--muted); cursor: pointer;
+      font-size: 14px; transition: all .2s; white-space: nowrap;
+    }
+    #refine-toggle:hover, #refine-toggle.active { border-color: var(--red); color: var(--red); }
+    #refine-panel {
+      display: none; position: absolute; top: calc(100% + 8px); right: 0; z-index: 600;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 16px 18px; min-width: 270px; box-shadow: 0 8px 32px rgba(0,0,0,.6);
+    }
+    #refine-panel.open { display: block; }
+    .rp-title { font-size: 10px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+    .rp-btns  { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+    .rp-btns:last-child { margin-bottom: 0; }
+    .rp-btn {
+      padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border);
+      background: transparent; color: var(--muted); font-size: 11px; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: all .15s;
+    }
+    .rp-btn:hover  { border-color: var(--red); color: var(--text); }
+    .rp-btn.active { background: var(--red); border-color: var(--red); color: #fff; }
+
     </style>
 </head>
 <body>
@@ -1138,6 +1165,7 @@
         </div>
         <div class="ms-panel">
           <label class="ms-opt all-opt"><input type="checkbox" value="all" checked onchange="msAllToggle('ms-round',this)"> All Rounds</label>
+          <label class="ms-opt"><input type="checkbox" value="78" onchange="msOptChange('ms-round')"> Round 78 — March</label>
           <label class="ms-opt"><input type="checkbox" value="79" onchange="msOptChange('ms-round')"> Round 79 — April</label>
           <label class="ms-opt"><input type="checkbox" value="80" onchange="msOptChange('ms-round')"> Round 80 — May</label>
           <label class="ms-opt"><input type="checkbox" value="81" onchange="msOptChange('ms-round')"> Round 81 — June</label>
@@ -1256,7 +1284,7 @@
     <div class="chart-wrap" style="height:180px"><canvas id="c-kpi-contract"></canvas></div>
     <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
       <div class="chart-title" id="kpi-contract-trend-title" style="font-size:13px">KPI Trend by Month</div>
-      <div class="chart-subtitle" id="kpi-contract-trend-subtitle">Compliance % per KPI across rounds (Apr–Jul)</div>
+      <div class="chart-subtitle" id="kpi-contract-trend-subtitle">Compliance % per KPI across rounds (Mar–Aug)</div>
     </div>
     <div class="chart-wrap" style="height:180px;margin-top:8px"><canvas id="c-kpi-contract-trend"></canvas></div>
   </div>
@@ -1310,12 +1338,37 @@
         <div class="chart-subtitle" id="table-count">Showing — records</div>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
-        <div class="sort-wrap" id="table-sort-wrap">
-          <button class="sort-btn" id="table-sort-btn" onclick="toggleSortPanel()" title="Sort options">
-            <span>⇅ Sort</span>
-          </button>
-          <div class="sort-panel" id="table-sort-panel">
-            <div class="sort-panel-title">Sort Records</div>
+        <input type="text" id="outlet-search"
+          placeholder="🔍  Search by code or name…"
+          oninput="renderTable(applyFilters(ALL_DATA))">
+        <button id="outlet-search-clear" title="Clear search"
+          style="padding:6px 10px;border-radius:8px;border:1px solid var(--border);
+                 background:var(--surface);color:var(--muted);cursor:pointer;font-size:13px">✕</button>
+        <div id="refine-wrapper">
+          <button id="refine-toggle" title="Refine / advanced filters" onclick="toggleRefinePanel()">🎛</button>
+          <div id="refine-panel">
+            <div class="rp-title">Score Level</div>
+            <div class="rp-btns">
+              <button class="rp-btn active" data-rs="all"  onclick="setRP('score',this,'all')">All</button>
+              <button class="rp-btn"        data-rs="low"  onclick="setRP('score',this,'low')">🔴 &lt;50%</button>
+              <button class="rp-btn"        data-rs="mid"  onclick="setRP('score',this,'mid')">🟡 50–70%</button>
+              <button class="rp-btn"        data-rs="high" onclick="setRP('score',this,'high')">🟢 ≥70%</button>
+            </div>
+            <div class="rp-title">Incentive</div>
+            <div class="rp-btns">
+              <button class="rp-btn active" data-ri="all" onclick="setRP('inc',this,'all')">All</button>
+              <button class="rp-btn"        data-ri="yes" onclick="setRP('inc',this,'yes')">✅ Has Incentive</button>
+              <button class="rp-btn"        data-ri="no"  onclick="setRP('inc',this,'no')">✗ No Incentive</button>
+            </div>
+            <div class="rp-title">Availability</div>
+            <div class="rp-btns" style="margin-bottom:0">
+              <button class="rp-btn active" data-ra="all"  onclick="setRP('avail',this,'all')">All</button>
+              <button class="rp-btn"        data-ra="pass" onclick="setRP('avail',this,'pass')">✓ Compliant</button>
+              <button class="rp-btn"        data-ra="fail" onclick="setRP('avail',this,'fail')">✗ Non-Compliant</button>
+            </div>
+          </div>
+        </div>
+      </div>
 
             <div class="sort-row">
               <label>Sort by</label>
@@ -1398,7 +1451,7 @@
       <table id="data-table">
         <thead>
           <tr>
-            <th data-col="serial">#</th>
+
             <th data-col="round">Round</th>
             <th data-col="outlet_code">Code</th>
             <th data-col="outlet_name">Name</th>
@@ -1440,7 +1493,8 @@
           </div>
           <div class="ms-panel">
             <label class="ms-opt all-opt"><input type="checkbox" value="all" checked onchange="msAllToggle('ms-m-round',this)"> All Rounds</label>
-            <label class="ms-opt"><input type="checkbox" value="79" onchange="msOptChange('ms-m-round')"> Round 79 — April</label>
+            <label class="ms-opt"><input type="checkbox" value="78" onchange="msOptChange('ms-m-round')"> Round 78 — March</label>
+          <label class="ms-opt"><input type="checkbox" value="79" onchange="msOptChange('ms-m-round')"> Round 79 — April</label>
             <label class="ms-opt"><input type="checkbox" value="80" onchange="msOptChange('ms-m-round')"> Round 80 — May</label>
             <label class="ms-opt"><input type="checkbox" value="81" onchange="msOptChange('ms-m-round')"> Round 81 — June</label>
             <label class="ms-opt"><input type="checkbox" value="82" onchange="msOptChange('ms-m-round')"> Round 82 — July</label>
@@ -2274,6 +2328,7 @@ function renderTable(data, opts) {
   const tbody = document.getElementById('table-body');
   // Apply outlet search filter — matches code, name, type, region or
   // governorate; multi-word queries require every word to match somewhere.
+  if (typeof applyRefineFilters === 'function') data = applyRefineFilters(data);
   const searchQ = (document.getElementById('outlet-search')?.value || '').toLowerCase().trim();
   const searchTerms = searchQ ? searchQ.split(/\s+/).filter(Boolean) : [];
   let filtered = searchTerms.length
@@ -2345,7 +2400,7 @@ function renderTable(data, opts) {
   }
 
   tbody.innerHTML = show.map(r => `<tr>
-    <td style="color:var(--muted)">${r.serial||'—'}</td>
+    
     <td><span class="badge badge-gold" style="font-size:10px">R${r.round||'—'}</span></td>
     <td style="font-family:monospace;color:var(--muted);font-size:11px">${r.outlet_code||'—'}</td>
     <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.outlet_name||''}">${r.outlet_name||'—'}</td>
@@ -2832,7 +2887,7 @@ function buildKPIContractTrendChart(data) {
   const titleEl    = document.getElementById('kpi-contract-trend-title');
   const subtitleEl = document.getElementById('kpi-contract-trend-subtitle');
   if (titleEl)    titleEl.textContent    = type + ' — KPI Trend by Month';
-  if (subtitleEl) subtitleEl.textContent = 'Compliance % per KPI across rounds (Apr–Jul)';
+  if (subtitleEl) subtitleEl.textContent = 'Compliance % per KPI across rounds (Mar–Aug)';
 }
 
 // Wire up the 4 contract-type tabs — drives both the compliance bar chart
@@ -3312,6 +3367,55 @@ function exportData(type) {
 }
 
 
+
+
+/* ═══════════════════════════════════════════════
+   TABLE REFINE FILTERS
+═══════════════════════════════════════════════ */
+let rpScore = 'all', rpInc = 'all', rpAvail = 'all';
+
+function toggleRefinePanel() {
+  const panel = document.getElementById('refine-panel');
+  const btn   = document.getElementById('refine-toggle');
+  panel.classList.toggle('open');
+  btn.classList.toggle('active');
+}
+document.addEventListener('click', function(e) {
+  const w = document.getElementById('refine-wrapper');
+  if (w && !w.contains(e.target)) {
+    document.getElementById('refine-panel')?.classList.remove('open');
+    document.getElementById('refine-toggle')?.classList.remove('active');
+  }
+});
+function setRP(type, btn, val) {
+  if (type === 'score') {
+    rpScore = val;
+    document.querySelectorAll('[data-rs]').forEach(b => b.classList.remove('active'));
+  } else if (type === 'inc') {
+    rpInc = val;
+    document.querySelectorAll('[data-ri]').forEach(b => b.classList.remove('active'));
+  } else {
+    rpAvail = val;
+    document.querySelectorAll('[data-ra]').forEach(b => b.classList.remove('active'));
+  }
+  btn.classList.add('active');
+  renderTable(applyFilters(ALL_DATA));
+  // Show count badge on toggle button
+  const active = [rpScore, rpInc, rpAvail].filter(v => v !== 'all').length;
+  const t = document.getElementById('refine-toggle');
+  if (t) t.textContent = active > 0 ? '🎛 ' + active : '🎛';
+}
+function applyRefineFilters(data) {
+  let d = data;
+  if (rpScore === 'low')  d = d.filter(r => typeof r.overall_score === 'number' && r.overall_score < 0.5);
+  if (rpScore === 'mid')  d = d.filter(r => typeof r.overall_score === 'number' && r.overall_score >= 0.5 && r.overall_score < 0.7);
+  if (rpScore === 'high') d = d.filter(r => typeof r.overall_score === 'number' && r.overall_score >= 0.7);
+  if (rpInc   === 'yes')  d = d.filter(r => typeof r.total_incentive === 'number' && r.total_incentive > 0);
+  if (rpInc   === 'no')   d = d.filter(r => !(typeof r.total_incentive === 'number' && r.total_incentive > 0));
+  if (rpAvail === 'pass') d = d.filter(r => r.avail_compliance === 1);
+  if (rpAvail === 'fail') d = d.filter(r => r.avail_compliance === 0);
+  return d;
+}
 
 </script>
 </body>

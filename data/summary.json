@@ -1,37 +1,19 @@
 {
-  "total_audits": 7347,
-  "avg_score": 0.5909,
-  "total_incentive": 37217.0,
-  "avail_compliant": 3678,
+  "total_audits": 7344,
+  "avg_score": 0.5444,
+  "total_incentive": 33529.5,
+  "avail_compliant": 3589,
   "outlet_counts": {
-    "Impulse & Grocery": 5509,
-    "Supermarket": 664,
-    "Gas Station": 1137,
-    "Bazar": 37
+    "Impulse & Grocery": 5369,
+    "Supermarket": 657,
+    "Gas Station": 1139,
+    "Bazar": 179
   },
   "round_stats": {
-    "80": {
-      "count": 1413,
-      "score_sum": 871.2000000000047,
-      "incentive_sum": 7643.0,
-      "avail_sum": 823
-    },
-    "79": {
-      "count": 1450,
-      "score_sum": 887.5095238095283,
-      "incentive_sum": 8195.0,
-      "avail_sum": 714
-    },
-    "81": {
-      "count": 1497,
-      "score_sum": 848.4404761904786,
-      "incentive_sum": 7479.0,
-      "avail_sum": 678
-    },
     "82": {
       "count": 1454,
-      "score_sum": 864.1666666666694,
-      "incentive_sum": 6204.0,
+      "score_sum": 864.3333333333361,
+      "incentive_sum": 8536.0,
       "avail_sum": 747
     },
     "83": {
@@ -39,48 +21,76 @@
       "score_sum": 869.8142857142875,
       "incentive_sum": 7696.0,
       "avail_sum": 716
+    },
+    "78": {
+      "count": 1424,
+      "score_sum": 739.3452380952385,
+      "incentive_sum": 6347.5,
+      "avail_sum": 744
+    },
+    "79": {
+      "count": 1442,
+      "score_sum": 676.2357142857169,
+      "incentive_sum": 3384.5,
+      "avail_sum": 709
+    },
+    "81": {
+      "count": 1491,
+      "score_sum": 848.3261904761929,
+      "incentive_sum": 7565.5,
+      "avail_sum": 673
     }
   },
   "region_stats": {
-    "Giza": {
-      "count": 1258,
-      "score_sum": 714.485714285717,
-      "incentive_sum": 5611.0
-    },
-    "Alexandria": {
-      "count": 1323,
-      "score_sum": 752.4833333333371,
-      "incentive_sum": 4893.5
-    },
-    "Delta": {
-      "count": 1901,
-      "score_sum": 1342.9095238095254,
-      "incentive_sum": 14875.5
-    },
     "Canal": {
-      "count": 713,
-      "score_sum": 403.11428571428564,
-      "incentive_sum": 2920.5
+      "count": 708,
+      "score_sum": 394.2476190476176,
+      "incentive_sum": 3543.0
     },
-    "Sinai": {
-      "count": 362,
-      "score_sum": 189.80952380952354,
-      "incentive_sum": 1409.5
+    "South Sinai": {
+      "count": 287,
+      "score_sum": 115.85952380952392,
+      "incentive_sum": 598.5
     },
-    "Red Sea": {
-      "count": 327,
-      "score_sum": 165.7095238095239,
-      "incentive_sum": 1124.0
-    },
-    "Cairo": {
-      "count": 1415,
-      "score_sum": 758.2857142857168,
-      "incentive_sum": 6265.0
+    "Hurghada": {
+      "count": 254,
+      "score_sum": 108.05714285714294,
+      "incentive_sum": 487.0
     },
     "Upper Egypt": {
       "count": 48,
-      "score_sum": 14.333333333333334,
-      "incentive_sum": 118
+      "score_sum": 16.33333333333333,
+      "incentive_sum": 188
+    },
+    "Cairo": {
+      "count": 1435,
+      "score_sum": 732.2547619047623,
+      "incentive_sum": 6666.0
+    },
+    "Giza": {
+      "count": 1254,
+      "score_sum": 670.1238095238101,
+      "incentive_sum": 4979.5
+    },
+    "Alexandria": {
+      "count": 1320,
+      "score_sum": 671.3761904761933,
+      "incentive_sum": 3950.0
+    },
+    "Delta": {
+      "count": 1890,
+      "score_sum": 1225.4428571428616,
+      "incentive_sum": 12841.5
+    },
+    "Red Sea": {
+      "count": 71,
+      "score_sum": 30.945238095238096,
+      "incentive_sum": 115
+    },
+    "Sinai": {
+      "count": 77,
+      "score_sum": 33.41428571428571,
+      "incentive_sum": 161
     }
   }
 }
