@@ -1848,13 +1848,16 @@ const CHART_OPT = {
 ═══════════════════════════════════════════════ */
 function buildTrend(data) {
   destroyChart('c-trend');
-  const rounds = [79,80,81,82];
-  const months = ['April','May','June','July'];
+  const ALL_MONTHS_ORDER = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const roundMonthMap = {78:'March',79:'April',80:'May',81:'June',82:'July',83:'August'};
+  // Get rounds present in data, sorted numerically
+  const rounds = [...new Set(data.map(r => r.round).filter(Boolean))].map(Number).sort((a,b)=>a-b);
+  const months = rounds.map(rnd => roundMonthMap[rnd] || ('R'+rnd));
   const avgScores = rounds.map(rnd => {
-    const sub = data.filter(r => r.round === rnd);
+    const sub = data.filter(r => +r.round === rnd);
     return +(avgScore(sub)*100).toFixed(1);
   });
-  const counts = rounds.map(rnd => data.filter(r => r.round === rnd).length);
+  const counts = rounds.map(rnd => data.filter(r => +r.round === rnd).length);
   charts['c-trend'] = new Chart(ctx('c-trend'), {
     type: 'line',
     data: {
@@ -1906,7 +1909,7 @@ function buildOutletChart(data) {
   destroyChart('c-outlet');
 
   const TYPES = ['Impulse & Grocery','Supermarket','Gas Station','Bazar'];
-  const MONTH_ORDER = ['April','May','June','July','August','September','October','November','December','January','February','March'];
+  const MONTH_ORDER = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const typeColors = {
     'Impulse & Grocery': RED,
     'Supermarket':       GOLD,
@@ -2161,10 +2164,11 @@ function buildGovernorateChart(data) {
 
 function buildAvailChart(data) {
   destroyChart('c-avail');
-  const rounds = [79,80,81,82];
-  const months = ['April','May','June','July'];
-  const compliant = rounds.map(r => data.filter(d=>d.round===r&&d.avail_compliance===1).length);
-  const nonComp   = rounds.map(r => data.filter(d=>d.round===r&&d.avail_compliance===0).length);
+  const _rndMonthMap = {78:'March',79:'April',80:'May',81:'June',82:'July',83:'August'};
+  const rounds = [...new Set(data.map(r => r.round).filter(Boolean))].map(Number).sort((a,b)=>a-b);
+  const months = rounds.map(rnd => _rndMonthMap[rnd] || ('R'+rnd));
+  const compliant = rounds.map(r => data.filter(d=>+d.round===r&&d.avail_compliance===1).length);
+  const nonComp   = rounds.map(r => data.filter(d=>+d.round===r&&d.avail_compliance===0).length);
   const roundTotals = rounds.map((r,i) => compliant[i]+nonComp[i]);
   const pctLabel = (value, idx) => {
     const total = roundTotals[idx];
@@ -2458,7 +2462,7 @@ function render() {
    KPI DEEP DIVE — one combo chart (bar % + line EGP)
    per KPI, each with its own outlet-type tabs
 ═══════════════════════════════════════════════ */
-const ROUNDS_MONTHS = [[79,'April'],[80,'May'],[81,'June'],[82,'July']];
+const ROUNDS_MONTHS = [[78,'March'],[79,'April'],[80,'May'],[81,'June'],[82,'July'],[83,'August']];
 
 // Which KPI cards to render, and which outlet type(s) each applies to.
 // Fixed fields (avail/sos/sz) are known-good; others resolve via KPI_CATALOG.
@@ -2535,13 +2539,15 @@ function createKPICardsDOM() {
 
 function buildKPICombo(canvasId, data, complianceKey, incentiveKey, colorBar) {
   destroyChart(canvasId);
-  const rounds = ROUNDS_MONTHS.map(r=>r[0]);
-  const months = ROUNDS_MONTHS.map(r=>r[1]);
+  const presentRounds = new Set(data.map(d => +d.round).filter(Boolean));
+  const activeRM = ROUNDS_MONTHS.filter(([r]) => presentRounds.has(r));
+  const rounds = activeRM.map(r=>r[0]);
+  const months = activeRM.map(r=>r[1]);
   const avgs = rounds.map(r => {
-    const vals = data.filter(d=>d.round===r).map(d=>d[complianceKey]).filter(v=>v===0||v===1);
+    const vals = data.filter(d=>+d.round===r).map(d=>d[complianceKey]).filter(v=>v===0||v===1);
     return vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length*100) : 0;
   });
-  const counts = rounds.map(r => data.filter(d=>d.round===r && (d[complianceKey]===0||d[complianceKey]===1)).length);
+  const counts = rounds.map(r => data.filter(d=>+d.round===r && (d[complianceKey]===0||d[complianceKey]===1)).length);
   const incentives = incentiveKey
     ? rounds.map(r => data.filter(d=>d.round===r).reduce((s,d)=>s+(typeof d[incentiveKey]==='number'?d[incentiveKey]:0),0))
     : null;
@@ -2821,13 +2827,15 @@ function buildKPIContractTrendChart(data) {
   const colors = KPI_PALETTE;
 
   const sub    = data.filter(r => r.outlet_type === type);
-  const rounds = ROUNDS_MONTHS.map(r => r[0]);
-  const months = ROUNDS_MONTHS.map(r => r[1]);
+  const _presentR = new Set(data.map(d => +d.round).filter(Boolean));
+  const _activeRM = ROUNDS_MONTHS.filter(([r]) => _presentR.has(r));
+  const rounds = _activeRM.map(r => r[0]);
+  const months = _activeRM.map(r => r[1]);
 
   const datasets = kpis.map((k, i) => {
     const color = colors[i % colors.length];
     const values = rounds.map(r => {
-      const valid = sub.filter(d => d.round === r && (d[k.comp] === 0 || d[k.comp] === 1));
+      const valid = sub.filter(d => +d.round === r && (d[k.comp] === 0 || d[k.comp] === 1));
       if (!valid.length) return null;
       return parseFloat((valid.filter(d => d[k.comp] === 1).length / valid.length * 100).toFixed(1));
     });
