@@ -67,6 +67,8 @@
       display: flex;
       align-items: center;
       gap: 16px;
+      min-width: 0;       /* allow this group to shrink so the title can truncate */
+      flex-shrink: 1;
     }
     .rb-logo-img {
       height: 48px;
@@ -83,9 +85,16 @@
     .logo-area h1 {
       font-size: 17px; font-weight: 700; color: var(--text);
       line-height: 1.2;
+      white-space: nowrap;      /* never wrap to a 2nd line — it breaks the fixed-height header */
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
     }
     .logo-area span {
       font-size: 12px; color: var(--muted); font-weight: 400;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .adhoc-logo-img {
       height: 32px;
@@ -97,6 +106,15 @@
     .header-meta {
       display: flex; gap: 10px; align-items: center;
       flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+    .header-tabs { flex-shrink: 0; }
+    /* Medium widths (tablets, landscape phones): the row gets tight before
+       it's narrow enough to hit the 640px mobile layout — drop the least
+       essential branding first so the title doesn't have to truncate. */
+    @media (max-width: 1024px) and (min-width: 641px) {
+      .adhoc-logo-img { display: none; }
+      .logo-area h1 { max-width: 240px; }
     }
     .badge {
       padding: 4px 12px; border-radius: 20px;
@@ -986,74 +1004,47 @@
       .header-inner { flex-wrap: wrap; height: auto; padding: 10px 0; }
     }
 
-    /* ── Sort panel (Outlet Detail table) ── */
-    .sort-wrap { position: relative; display: inline-block; }
-    .sort-btn {
-      padding: 6px 12px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--text);
-      cursor: pointer;
-      font-size: 12.5px;
-      font-weight: 600;
+    /* ── Sort dropdown (Outlet Detail table) — reuses the .ms-wrap/.ms-panel
+       shell used by the Round/Type/Region multiselect filters, so it opens
+       as one compact overlay instead of a row of inline selects. ── */
+    #table-sort-wrap .ms-display { min-width: 150px; }
+    .sort-opt-list { max-height: 260px; overflow-y: auto; }
+    .sort-opt {
       display: flex;
       align-items: center;
-      gap: 6px;
-      transition: border-color .15s, background .15s;
-    }
-    .sort-btn:hover, .sort-wrap.open .sort-btn { border-color: rgba(232,0,28,.5); background: var(--surface2); }
-    .sort-panel {
-      display: none;
-      position: absolute;
-      top: calc(100% + 8px);
-      right: 0;
-      z-index: 3000;
-      width: 260px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px;
-      box-shadow: 0 12px 32px rgba(0,0,0,.45);
-    }
-    .sort-wrap.open .sort-panel { display: block; }
-    .sort-panel-title {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: .6px;
-      color: var(--muted);
-      font-weight: 700;
-      margin-bottom: 10px;
-    }
-    .sort-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
-    .sort-row label { font-size: 10.5px; color: var(--muted); font-weight: 600; }
-    .sort-row-fields { display: flex; gap: 6px; }
-    .sort-row select {
-      flex: 1;
-      min-width: 0;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 6px;
-      padding: 6px 8px;
-      font-size: 12px;
-      outline: none;
-    }
-    .sort-row select:focus { border-color: rgba(232,0,28,.5); }
-    .sort-actions { display: flex; justify-content: space-between; gap: 8px; margin-top: 4px; }
-    .sort-actions button {
-      flex: 1;
+      justify-content: space-between;
+      gap: 8px;
       padding: 7px 10px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      font-size: 12px;
-      font-weight: 700;
+      border-radius: 6px;
       cursor: pointer;
+      color: #94a3b8;
+      font-size: 13px;
+      transition: background .15s;
     }
-    .sort-reset-btn { background: var(--surface2); color: var(--muted); }
-    .sort-reset-btn:hover { color: var(--text); }
-    .sort-apply-btn { background: var(--red); color: #fff; border-color: var(--red); }
-    .sort-apply-btn:hover { background: #ff1a35; }
+    .sort-opt:hover { background: rgba(255,255,255,0.06); color: #e2e8f0; }
+    .sort-opt.active { color: #e2e8f0; }
+    .sort-opt-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .sort-rank {
+      width: 16px; height: 16px; border-radius: 50%;
+      background: rgba(232,0,28,.22); color: #e8001c;
+      font-size: 10px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; visibility: hidden;
+    }
+    .sort-opt.active .sort-rank { visibility: visible; }
+    .sort-dir-btn {
+      all: unset; cursor: pointer;
+      font-size: 11px; color: #64748b;
+      padding: 2px 7px; border-radius: 5px;
+      flex-shrink: 0; visibility: hidden;
+    }
+    .sort-opt.active .sort-dir-btn { visibility: visible; }
+    .sort-dir-btn:hover { background: rgba(255,255,255,0.08); color: #e2e8f0; }
+    .sort-clear-opt {
+      border-top: 1px solid rgba(255,255,255,0.08);
+      margin-top: 4px; padding-top: 10px;
+      color: #e8001c; font-weight: 600; justify-content: center;
+    }
     /* ── Table pagination ── */
     .table-pagination {
       display: flex;
@@ -1063,6 +1054,27 @@
       margin-top: 14px;
       flex-wrap: wrap;
     }
+    .page-size-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+      margin-right: 8px;
+    }
+    .page-size-label select {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-size: 12.5px;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+    }
+    .page-size-label select:focus { border-color: rgba(232,0,28,.5); }
     .page-btn {
       padding: 7px 14px;
       border-radius: 8px;
@@ -1083,33 +1095,6 @@
       min-width: 110px;
       text-align: center;
     }
-    
-    /* ── Table Refine Panel ── */
-    #refine-wrapper { position: relative; }
-    #refine-toggle {
-      padding: 6px 11px; border-radius: 8px; border: 1px solid var(--border);
-      background: var(--surface); color: var(--muted); cursor: pointer;
-      font-size: 14px; transition: all .2s; white-space: nowrap;
-    }
-    #refine-toggle:hover, #refine-toggle.active { border-color: var(--red); color: var(--red); }
-    #refine-panel {
-      display: none; position: absolute; top: calc(100% + 8px); right: 0; z-index: 600;
-      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-      padding: 16px 18px; min-width: 270px; box-shadow: 0 8px 32px rgba(0,0,0,.6);
-    }
-    #refine-panel.open { display: block; }
-    .rp-title { font-size: 10px; font-weight: 700; letter-spacing: 1px;
-      text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
-    .rp-btns  { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
-    .rp-btns:last-child { margin-bottom: 0; }
-    .rp-btn {
-      padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border);
-      background: transparent; color: var(--muted); font-size: 11px; font-weight: 600;
-      cursor: pointer; font-family: inherit; transition: all .15s;
-    }
-    .rp-btn:hover  { border-color: var(--red); color: var(--text); }
-    .rp-btn.active { background: var(--red); border-color: var(--red); color: #fff; }
-
     </style>
 </head>
 <body>
@@ -1165,7 +1150,6 @@
         </div>
         <div class="ms-panel">
           <label class="ms-opt all-opt"><input type="checkbox" value="all" checked onchange="msAllToggle('ms-round',this)"> All Rounds</label>
-          <label class="ms-opt"><input type="checkbox" value="78" onchange="msOptChange('ms-round')"> Round 78 — March</label>
           <label class="ms-opt"><input type="checkbox" value="79" onchange="msOptChange('ms-round')"> Round 79 — April</label>
           <label class="ms-opt"><input type="checkbox" value="80" onchange="msOptChange('ms-round')"> Round 80 — May</label>
           <label class="ms-opt"><input type="checkbox" value="81" onchange="msOptChange('ms-round')"> Round 81 — June</label>
@@ -1284,7 +1268,7 @@
     <div class="chart-wrap" style="height:180px"><canvas id="c-kpi-contract"></canvas></div>
     <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
       <div class="chart-title" id="kpi-contract-trend-title" style="font-size:13px">KPI Trend by Month</div>
-      <div class="chart-subtitle" id="kpi-contract-trend-subtitle">Compliance % per KPI across rounds (Mar–Aug)</div>
+      <div class="chart-subtitle" id="kpi-contract-trend-subtitle">Compliance % per KPI across rounds (Apr–Jul)</div>
     </div>
     <div class="chart-wrap" style="height:180px;margin-top:8px"><canvas id="c-kpi-contract-trend"></canvas></div>
   </div>
@@ -1338,105 +1322,14 @@
         <div class="chart-subtitle" id="table-count">Showing — records</div>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
-        <input type="text" id="outlet-search"
-          placeholder="🔍  Search by code or name…"
-          oninput="renderTable(applyFilters(ALL_DATA))">
-        <button id="outlet-search-clear" title="Clear search"
-          style="padding:6px 10px;border-radius:8px;border:1px solid var(--border);
-                 background:var(--surface);color:var(--muted);cursor:pointer;font-size:13px">✕</button>
-        <div id="refine-wrapper">
-          <button id="refine-toggle" title="Refine / advanced filters" onclick="toggleRefinePanel()">🎛</button>
-          <div id="refine-panel">
-            <div class="rp-title">Score Level</div>
-            <div class="rp-btns">
-              <button class="rp-btn active" data-rs="all"  onclick="setRP('score',this,'all')">All</button>
-              <button class="rp-btn"        data-rs="low"  onclick="setRP('score',this,'low')">🔴 &lt;50%</button>
-              <button class="rp-btn"        data-rs="mid"  onclick="setRP('score',this,'mid')">🟡 50–70%</button>
-              <button class="rp-btn"        data-rs="high" onclick="setRP('score',this,'high')">🟢 ≥70%</button>
-            </div>
-            <div class="rp-title">Incentive</div>
-            <div class="rp-btns">
-              <button class="rp-btn active" data-ri="all" onclick="setRP('inc',this,'all')">All</button>
-              <button class="rp-btn"        data-ri="yes" onclick="setRP('inc',this,'yes')">✅ Has Incentive</button>
-              <button class="rp-btn"        data-ri="no"  onclick="setRP('inc',this,'no')">✗ No Incentive</button>
-            </div>
-            <div class="rp-title">Availability</div>
-            <div class="rp-btns" style="margin-bottom:0">
-              <button class="rp-btn active" data-ra="all"  onclick="setRP('avail',this,'all')">All</button>
-              <button class="rp-btn"        data-ra="pass" onclick="setRP('avail',this,'pass')">✓ Compliant</button>
-              <button class="rp-btn"        data-ra="fail" onclick="setRP('avail',this,'fail')">✗ Non-Compliant</button>
-            </div>
+        <div class="ms-wrap" id="table-sort-wrap">
+          <div class="ms-display" onclick="toggleSortPanel()">
+            <span id="sort-display-label">Sort</span>
+            <span class="ms-arrow">▾</span>
           </div>
-        </div>
-      </div>
-
-            <div class="sort-row">
-              <label>Sort by</label>
-              <div class="sort-row-fields">
-                <select id="sort-field-1">
-                  <option value="">— None —</option>
-                  <option value="outlet_type">Type</option>
-                  <option value="region">Region</option>
-                  <option value="governorate">Governorate</option>
-                  <option value="round">Round</option>
-                  <option value="outlet_code">Code</option>
-                  <option value="outlet_name">Name</option>
-                  <option value="overall_score">Score</option>
-                  <option value="total_incentive">Incentive</option>
-                </select>
-                <select id="sort-dir-1">
-                  <option value="asc">Asc</option>
-                  <option value="desc">Desc</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="sort-row">
-              <label>Then by</label>
-              <div class="sort-row-fields">
-                <select id="sort-field-2">
-                  <option value="">— None —</option>
-                  <option value="outlet_type">Type</option>
-                  <option value="region">Region</option>
-                  <option value="governorate">Governorate</option>
-                  <option value="round">Round</option>
-                  <option value="outlet_code">Code</option>
-                  <option value="outlet_name">Name</option>
-                  <option value="overall_score">Score</option>
-                  <option value="total_incentive">Incentive</option>
-                </select>
-                <select id="sort-dir-2">
-                  <option value="asc">Asc</option>
-                  <option value="desc">Desc</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="sort-row">
-              <label>Then by</label>
-              <div class="sort-row-fields">
-                <select id="sort-field-3">
-                  <option value="">— None —</option>
-                  <option value="outlet_type">Type</option>
-                  <option value="region">Region</option>
-                  <option value="governorate">Governorate</option>
-                  <option value="round">Round</option>
-                  <option value="outlet_code">Code</option>
-                  <option value="outlet_name">Name</option>
-                  <option value="overall_score">Score</option>
-                  <option value="total_incentive">Incentive</option>
-                </select>
-                <select id="sort-dir-3">
-                  <option value="asc">Asc</option>
-                  <option value="desc">Desc</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="sort-actions">
-              <button class="sort-reset-btn" onclick="resetSort()">Reset</button>
-              <button class="sort-apply-btn" onclick="applySortFromPanel()">Apply</button>
-            </div>
+          <div class="ms-panel" id="table-sort-panel" style="min-width:210px; right:0; left:auto;">
+            <div class="sort-opt-list" id="sort-opt-list"><!-- built by JS --></div>
+            <div class="ms-opt sort-clear-opt" onclick="resetSort()">Clear sort</div>
           </div>
         </div>
         <input type="text" id="outlet-search"
@@ -1451,7 +1344,7 @@
       <table id="data-table">
         <thead>
           <tr>
-
+            <th data-col="serial">#</th>
             <th data-col="round">Round</th>
             <th data-col="outlet_code">Code</th>
             <th data-col="outlet_name">Name</th>
@@ -1466,6 +1359,15 @@
       </table>
     </div>
     <div class="table-pagination" id="table-pagination">
+      <label class="page-size-label">
+        Rows per page
+        <select id="page-size-select" onchange="changeTablePageSize(this.value)">
+          <option value="20" selected>20</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+          <option value="200">200</option>
+        </select>
+      </label>
       <button class="page-btn" id="page-first" onclick="goToTablePage(1)" title="First page">« First</button>
       <button class="page-btn" id="page-prev" onclick="goToTablePage(tablePage-1)" title="Previous page">‹ Prev</button>
       <span class="page-info" id="page-info">Page 1 of 1</span>
@@ -1493,11 +1395,11 @@
           </div>
           <div class="ms-panel">
             <label class="ms-opt all-opt"><input type="checkbox" value="all" checked onchange="msAllToggle('ms-m-round',this)"> All Rounds</label>
-            <label class="ms-opt"><input type="checkbox" value="78" onchange="msOptChange('ms-m-round')"> Round 78 — March</label>
-          <label class="ms-opt"><input type="checkbox" value="79" onchange="msOptChange('ms-m-round')"> Round 79 — April</label>
+            <label class="ms-opt"><input type="checkbox" value="79" onchange="msOptChange('ms-m-round')"> Round 79 — April</label>
             <label class="ms-opt"><input type="checkbox" value="80" onchange="msOptChange('ms-m-round')"> Round 80 — May</label>
             <label class="ms-opt"><input type="checkbox" value="81" onchange="msOptChange('ms-m-round')"> Round 81 — June</label>
             <label class="ms-opt"><input type="checkbox" value="82" onchange="msOptChange('ms-m-round')"> Round 82 — July</label>
+          <label class="ms-opt"><input type="checkbox" value="83" onchange="msOptChange('ms-m-round')"> Round 83 — August</label>
             <label class="ms-opt"><input type="checkbox" value="83" onchange="msOptChange('ms-m-round')"> Round 83 — August</label>
           </div>
         </div>
@@ -1847,16 +1749,13 @@ const CHART_OPT = {
 ═══════════════════════════════════════════════ */
 function buildTrend(data) {
   destroyChart('c-trend');
-  const ALL_MONTHS_ORDER = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const roundMonthMap = {78:'March',79:'April',80:'May',81:'June',82:'July',83:'August'};
-  // Get rounds present in data, sorted numerically
-  const rounds = [...new Set(data.map(r => r.round).filter(Boolean))].map(Number).sort((a,b)=>a-b);
-  const months = rounds.map(rnd => roundMonthMap[rnd] || ('R'+rnd));
+  const rounds = [79,80,81,82];
+  const months = ['April','May','June','July'];
   const avgScores = rounds.map(rnd => {
-    const sub = data.filter(r => +r.round === rnd);
+    const sub = data.filter(r => r.round === rnd);
     return +(avgScore(sub)*100).toFixed(1);
   });
-  const counts = rounds.map(rnd => data.filter(r => +r.round === rnd).length);
+  const counts = rounds.map(rnd => data.filter(r => r.round === rnd).length);
   charts['c-trend'] = new Chart(ctx('c-trend'), {
     type: 'line',
     data: {
@@ -1908,7 +1807,7 @@ function buildOutletChart(data) {
   destroyChart('c-outlet');
 
   const TYPES = ['Impulse & Grocery','Supermarket','Gas Station','Bazar'];
-  const MONTH_ORDER = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const MONTH_ORDER = ['April','May','June','July','August','September','October','November','December','January','February','March'];
   const typeColors = {
     'Impulse & Grocery': RED,
     'Supermarket':       GOLD,
@@ -2163,11 +2062,10 @@ function buildGovernorateChart(data) {
 
 function buildAvailChart(data) {
   destroyChart('c-avail');
-  const _rndMonthMap = {78:'March',79:'April',80:'May',81:'June',82:'July',83:'August'};
-  const rounds = [...new Set(data.map(r => r.round).filter(Boolean))].map(Number).sort((a,b)=>a-b);
-  const months = rounds.map(rnd => _rndMonthMap[rnd] || ('R'+rnd));
-  const compliant = rounds.map(r => data.filter(d=>+d.round===r&&d.avail_compliance===1).length);
-  const nonComp   = rounds.map(r => data.filter(d=>+d.round===r&&d.avail_compliance===0).length);
+  const rounds = [79,80,81,82];
+  const months = ['April','May','June','July'];
+  const compliant = rounds.map(r => data.filter(d=>d.round===r&&d.avail_compliance===1).length);
+  const nonComp   = rounds.map(r => data.filter(d=>d.round===r&&d.avail_compliance===0).length);
   const roundTotals = rounds.map((r,i) => compliant[i]+nonComp[i]);
   const pctLabel = (value, idx) => {
     const total = roundTotals[idx];
@@ -2211,6 +2109,17 @@ const SORT_COL_LABELS = {
   outlet_type: 'Type', region: 'Region', governorate: 'Governorate',
   overall_score: 'Score', total_incentive: 'Incentive'
 };
+// The set of columns offered in the Sort dropdown (order = list order).
+const SORT_COLUMNS = [
+  { col: 'outlet_type',    label: 'Type' },
+  { col: 'region',         label: 'Region' },
+  { col: 'governorate',    label: 'Governorate' },
+  { col: 'round',          label: 'Round' },
+  { col: 'outlet_code',    label: 'Code' },
+  { col: 'outlet_name',    label: 'Name' },
+  { col: 'overall_score',  label: 'Score' },
+  { col: 'total_incentive',label: 'Incentive' },
+];
 
 function compareVals(av, bv) {
   const aEmpty = av === null || av === undefined || av === '';
@@ -2245,41 +2154,73 @@ function updateSortIndicators() {
     }
     th.textContent = label;
   });
+  const displayLabel = document.getElementById('sort-display-label');
+  if (displayLabel) {
+    if (!sortRules.length) displayLabel.textContent = 'Sort';
+    else if (sortRules.length === 1) displayLabel.textContent = 'Sort: ' + (SORT_COL_LABELS[sortRules[0].col] || sortRules[0].col);
+    else displayLabel.textContent = 'Sort (' + sortRules.length + ')';
+  }
 }
 
 function toggleSortPanel() {
   document.getElementById('table-sort-wrap').classList.toggle('open');
 }
 
-function syncSortPanelFromRules() {
-  for (let i = 0; i < 3; i++) {
-    const rule = sortRules[i];
-    const fieldSel = document.getElementById('sort-field-' + (i + 1));
-    const dirSel   = document.getElementById('sort-dir-' + (i + 1));
-    if (!fieldSel || !dirSel) continue;
-    fieldSel.value = rule ? rule.col : '';
-    dirSel.value   = rule ? rule.dir : 'asc';
-  }
+// One dropdown, multi-select: clicking a row adds/removes it from the
+// active sort (order clicked = priority); the small ▲/▼ button on an
+// active row flips its direction. Both apply immediately, like the
+// Round/Type/Region filters.
+function buildSortPanel() {
+  const list = document.getElementById('sort-opt-list');
+  if (!list) return;
+  list.innerHTML = SORT_COLUMNS.map(c =>
+    '<div class="sort-opt" data-col="' + c.col + '" onclick="toggleSortCol(\'' + c.col + '\')">' +
+      '<span class="sort-opt-left"><span class="sort-rank"></span><span>' + c.label + '</span></span>' +
+      '<button type="button" class="sort-dir-btn" onclick="event.stopPropagation(); toggleSortDir(\'' + c.col + '\')">Asc ▲</button>' +
+    '</div>'
+  ).join('');
 }
 
-function applySortFromPanel() {
-  const rules = [];
-  for (let i = 1; i <= 3; i++) {
-    const col = document.getElementById('sort-field-' + i)?.value;
-    const dir = document.getElementById('sort-dir-' + i)?.value || 'asc';
-    if (col) rules.push({ col, dir });
-  }
-  sortRules = rules;
+function refreshSortPanelUI() {
+  document.querySelectorAll('#sort-opt-list .sort-opt').forEach(opt => {
+    const col = opt.dataset.col;
+    const idx = sortRules.findIndex(r => r.col === col);
+    const rankEl = opt.querySelector('.sort-rank');
+    const dirBtn = opt.querySelector('.sort-dir-btn');
+    if (idx === -1) {
+      opt.classList.remove('active');
+      rankEl.textContent = '';
+      dirBtn.textContent = 'Asc ▲';
+    } else {
+      opt.classList.add('active');
+      rankEl.textContent = String(idx + 1);
+      dirBtn.textContent = sortRules[idx].dir === 'desc' ? 'Desc ▼' : 'Asc ▲';
+    }
+  });
+}
+
+function toggleSortCol(col) {
+  const idx = sortRules.findIndex(r => r.col === col);
+  if (idx === -1) sortRules.push({ col, dir: 'asc' });
+  else sortRules.splice(idx, 1);
+  refreshSortPanelUI();
   updateSortIndicators();
-  document.getElementById('table-sort-wrap').classList.remove('open');
+  renderTable(applyFilters(ALL_DATA));
+}
+
+function toggleSortDir(col) {
+  const rule = sortRules.find(r => r.col === col);
+  if (!rule) { sortRules.push({ col, dir: 'asc' }); }
+  else rule.dir = rule.dir === 'asc' ? 'desc' : 'asc';
+  refreshSortPanelUI();
+  updateSortIndicators();
   renderTable(applyFilters(ALL_DATA));
 }
 
 function resetSort() {
   sortRules = [];
-  syncSortPanelFromRules();
+  refreshSortPanelUI();
   updateSortIndicators();
-  document.getElementById('table-sort-wrap').classList.remove('open');
   renderTable(applyFilters(ALL_DATA));
 }
 
@@ -2302,7 +2243,13 @@ function scoreFill(v) {
 
 let tablePage = 1;
 let totalTablePages = 1;
-const TABLE_PAGE_SIZE = 200;
+let TABLE_PAGE_SIZE = 20;
+
+function changeTablePageSize(size) {
+  TABLE_PAGE_SIZE = parseInt(size, 10) || 20;
+  tablePage = 1;
+  renderTable(applyFilters(ALL_DATA), { keepPage: true });
+}
 
 function goToTablePage(p) {
   p = Math.max(1, Math.min(p, totalTablePages));
@@ -2331,7 +2278,6 @@ function renderTable(data, opts) {
   const tbody = document.getElementById('table-body');
   // Apply outlet search filter — matches code, name, type, region or
   // governorate; multi-word queries require every word to match somewhere.
-  if (typeof applyRefineFilters === 'function') data = applyRefineFilters(data);
   const searchQ = (document.getElementById('outlet-search')?.value || '').toLowerCase().trim();
   const searchTerms = searchQ ? searchQ.split(/\s+/).filter(Boolean) : [];
   let filtered = searchTerms.length
@@ -2403,7 +2349,7 @@ function renderTable(data, opts) {
   }
 
   tbody.innerHTML = show.map(r => `<tr>
-    
+    <td style="color:var(--muted)">${r.serial||'—'}</td>
     <td><span class="badge badge-gold" style="font-size:10px">R${r.round||'—'}</span></td>
     <td style="font-family:monospace;color:var(--muted);font-size:11px">${r.outlet_code||'—'}</td>
     <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.outlet_name||''}">${r.outlet_name||'—'}</td>
@@ -2424,11 +2370,12 @@ document.querySelectorAll('#data-table thead th[data-col]').forEach(th => {
     const current = sortRules[0];
     const dir = (current && current.col === col && current.dir === 'asc') ? 'desc' : 'asc';
     sortRules = [{ col, dir }];
-    syncSortPanelFromRules();
+    refreshSortPanelUI();
     updateSortIndicators();
     renderTable(applyFilters(ALL_DATA));
   });
 });
+buildSortPanel();
 updateSortIndicators();
 
 /* ═══════════════════════════════════════════════
@@ -2461,7 +2408,7 @@ function render() {
    KPI DEEP DIVE — one combo chart (bar % + line EGP)
    per KPI, each with its own outlet-type tabs
 ═══════════════════════════════════════════════ */
-const ROUNDS_MONTHS = [[78,'March'],[79,'April'],[80,'May'],[81,'June'],[82,'July'],[83,'August']];
+const ROUNDS_MONTHS = [[79,'April'],[80,'May'],[81,'June'],[82,'July']];
 
 // Which KPI cards to render, and which outlet type(s) each applies to.
 // Fixed fields (avail/sos/sz) are known-good; others resolve via KPI_CATALOG.
@@ -2538,15 +2485,13 @@ function createKPICardsDOM() {
 
 function buildKPICombo(canvasId, data, complianceKey, incentiveKey, colorBar) {
   destroyChart(canvasId);
-  const presentRounds = new Set(data.map(d => +d.round).filter(Boolean));
-  const activeRM = ROUNDS_MONTHS.filter(([r]) => presentRounds.has(r));
-  const rounds = activeRM.map(r=>r[0]);
-  const months = activeRM.map(r=>r[1]);
+  const rounds = ROUNDS_MONTHS.map(r=>r[0]);
+  const months = ROUNDS_MONTHS.map(r=>r[1]);
   const avgs = rounds.map(r => {
-    const vals = data.filter(d=>+d.round===r).map(d=>d[complianceKey]).filter(v=>v===0||v===1);
+    const vals = data.filter(d=>d.round===r).map(d=>d[complianceKey]).filter(v=>v===0||v===1);
     return vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length*100) : 0;
   });
-  const counts = rounds.map(r => data.filter(d=>+d.round===r && (d[complianceKey]===0||d[complianceKey]===1)).length);
+  const counts = rounds.map(r => data.filter(d=>d.round===r && (d[complianceKey]===0||d[complianceKey]===1)).length);
   const incentives = incentiveKey
     ? rounds.map(r => data.filter(d=>d.round===r).reduce((s,d)=>s+(typeof d[incentiveKey]==='number'?d[incentiveKey]:0),0))
     : null;
@@ -2826,15 +2771,13 @@ function buildKPIContractTrendChart(data) {
   const colors = KPI_PALETTE;
 
   const sub    = data.filter(r => r.outlet_type === type);
-  const _presentR = new Set(data.map(d => +d.round).filter(Boolean));
-  const _activeRM = ROUNDS_MONTHS.filter(([r]) => _presentR.has(r));
-  const rounds = _activeRM.map(r => r[0]);
-  const months = _activeRM.map(r => r[1]);
+  const rounds = ROUNDS_MONTHS.map(r => r[0]);
+  const months = ROUNDS_MONTHS.map(r => r[1]);
 
   const datasets = kpis.map((k, i) => {
     const color = colors[i % colors.length];
     const values = rounds.map(r => {
-      const valid = sub.filter(d => +d.round === r && (d[k.comp] === 0 || d[k.comp] === 1));
+      const valid = sub.filter(d => d.round === r && (d[k.comp] === 0 || d[k.comp] === 1));
       if (!valid.length) return null;
       return parseFloat((valid.filter(d => d[k.comp] === 1).length / valid.length * 100).toFixed(1));
     });
@@ -2894,7 +2837,7 @@ function buildKPIContractTrendChart(data) {
   const titleEl    = document.getElementById('kpi-contract-trend-title');
   const subtitleEl = document.getElementById('kpi-contract-trend-subtitle');
   if (titleEl)    titleEl.textContent    = type + ' — KPI Trend by Month';
-  if (subtitleEl) subtitleEl.textContent = 'Compliance % per KPI across rounds (Mar–Aug)';
+  if (subtitleEl) subtitleEl.textContent = 'Compliance % per KPI across rounds (Apr–Jul)';
 }
 
 // Wire up the 4 contract-type tabs — drives both the compliance bar chart
@@ -3282,13 +3225,10 @@ function msOptChange(id) {
   }
 }
 
-// Close multi-selects and the sort panel when clicking outside
+// Close multi-selects (including the Sort dropdown, which reuses .ms-wrap) when clicking outside
 document.addEventListener('click', e => {
   if (!e.target.closest('.ms-wrap')) {
     document.querySelectorAll('.ms-wrap.open').forEach(w => w.classList.remove('open'));
-  }
-  if (!e.target.closest('.sort-wrap')) {
-    document.querySelectorAll('.sort-wrap.open').forEach(w => w.classList.remove('open'));
   }
 });
 
@@ -3374,55 +3314,6 @@ function exportData(type) {
 }
 
 
-
-
-/* ═══════════════════════════════════════════════
-   TABLE REFINE FILTERS
-═══════════════════════════════════════════════ */
-let rpScore = 'all', rpInc = 'all', rpAvail = 'all';
-
-function toggleRefinePanel() {
-  const panel = document.getElementById('refine-panel');
-  const btn   = document.getElementById('refine-toggle');
-  panel.classList.toggle('open');
-  btn.classList.toggle('active');
-}
-document.addEventListener('click', function(e) {
-  const w = document.getElementById('refine-wrapper');
-  if (w && !w.contains(e.target)) {
-    document.getElementById('refine-panel')?.classList.remove('open');
-    document.getElementById('refine-toggle')?.classList.remove('active');
-  }
-});
-function setRP(type, btn, val) {
-  if (type === 'score') {
-    rpScore = val;
-    document.querySelectorAll('[data-rs]').forEach(b => b.classList.remove('active'));
-  } else if (type === 'inc') {
-    rpInc = val;
-    document.querySelectorAll('[data-ri]').forEach(b => b.classList.remove('active'));
-  } else {
-    rpAvail = val;
-    document.querySelectorAll('[data-ra]').forEach(b => b.classList.remove('active'));
-  }
-  btn.classList.add('active');
-  renderTable(applyFilters(ALL_DATA));
-  // Show count badge on toggle button
-  const active = [rpScore, rpInc, rpAvail].filter(v => v !== 'all').length;
-  const t = document.getElementById('refine-toggle');
-  if (t) t.textContent = active > 0 ? '🎛 ' + active : '🎛';
-}
-function applyRefineFilters(data) {
-  let d = data;
-  if (rpScore === 'low')  d = d.filter(r => typeof r.overall_score === 'number' && r.overall_score < 0.5);
-  if (rpScore === 'mid')  d = d.filter(r => typeof r.overall_score === 'number' && r.overall_score >= 0.5 && r.overall_score < 0.7);
-  if (rpScore === 'high') d = d.filter(r => typeof r.overall_score === 'number' && r.overall_score >= 0.7);
-  if (rpInc   === 'yes')  d = d.filter(r => typeof r.total_incentive === 'number' && r.total_incentive > 0);
-  if (rpInc   === 'no')   d = d.filter(r => !(typeof r.total_incentive === 'number' && r.total_incentive > 0));
-  if (rpAvail === 'pass') d = d.filter(r => r.avail_compliance === 1);
-  if (rpAvail === 'fail') d = d.filter(r => r.avail_compliance === 0);
-  return d;
-}
 
 </script>
 </body>
